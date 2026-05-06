@@ -1,1 +1,816 @@
-placeholder
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLAST POST PRODUCTION</title>
+<style>
+  :root {
+    --bg:      #0d0f11;
+    --bg2:     #141618;
+    --bg3:     #1c2024;
+    --border:  #2c3038;
+    --border2: #525868;
+    --text:    #f0ece4;
+    --text2:   #c8c3bc;
+    --text3:   #8a8d98;
+    --gold:    #d4c49c;
+    --gold2:   #e8dab8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system,'Malgun Gothic','맑은 고딕',BlinkMacSystemFont,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; line-height:1.5; }
+
+  .page        { display:none; }
+  .page.active { display:block; animation:fadeUp .2s ease; }
+  #page-home.active { display:flex; flex-direction:column; min-height:100vh; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+  /* ══ HOME ══ */
+  .home-bar { display:flex; justify-content:space-between; align-items:center; padding:22px 52px; border-bottom:1px solid var(--border); }
+  .home-bar-date { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); }
+  .live-pill { display:flex; align-items:center; gap:7px; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); }
+  .live-dot  { width:6px; height:6px; border-radius:50%; background:#5ab85a; animation:blink 2.5s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .home-hero { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:52px 48px 36px; text-align:center; }
+
+  .blast-logo { display:flex; flex-direction:column; align-items:center; gap:14px; margin-bottom:44px; }
+  .blast-wordmark { font-size:clamp(60px,9vw,112px); font-weight:200; letter-spacing:clamp(20px,4vw,48px); text-indent:clamp(20px,4vw,48px); color:var(--text); line-height:1; font-family:'Helvetica Neue','Arial',sans-serif; }
+  .blast-sub { font-size:clamp(9px,1.1vw,12px); font-weight:300; letter-spacing:clamp(7px,2.5vw,20px); text-indent:clamp(7px,2.5vw,20px); color:var(--text3); text-transform:uppercase; }
+  .blast-rule { width:40px; height:1px; background:var(--gold); opacity:.5; margin:0 auto 28px; }
+
+  .home-stats { display:flex; border:1px solid var(--border); margin-bottom:44px; background:var(--bg2); }
+  .home-stat  { flex:1; padding:22px 32px; text-align:center; border-right:1px solid var(--border); transition:background .15s; }
+  .home-stat:last-child { border-right:none; }
+  .home-stat:hover { background:var(--bg3); }
+  .h-stat-val { font-size:38px; font-weight:300; color:var(--gold2); letter-spacing:1px; margin-bottom:8px; line-height:1; }
+  .h-stat-lbl { font-size:10px; letter-spacing:2.5px; text-transform:uppercase; color:var(--text3); }
+
+  .home-nav { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; max-width:600px; }
+  .hn-card {
+    background:var(--bg2); border:1px solid var(--border); padding:32px 30px;
+    cursor:pointer; transition:border-color .2s,background .2s,transform .15s;
+    position:relative; overflow:hidden; display:flex; flex-direction:column; gap:12px; user-select:none;
+  }
+  .hn-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--gold); transform:scaleY(0); transform-origin:bottom; transition:transform .25s ease; }
+  .hn-card::after  { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(212,196,156,.04) 0%,transparent 60%); opacity:0; transition:opacity .2s; }
+  .hn-card:hover { background:var(--bg3); border-color:var(--border2); transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.4); }
+  .hn-card:hover::before { transform:scaleY(1); }
+  .hn-card:hover::after  { opacity:1; }
+  .hn-tag   { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); opacity:.7; }
+  .hn-title { font-size:22px; font-weight:500; color:var(--text); letter-spacing:.3px; }
+  .hn-go    { margin-top:4px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); transition:color .2s; }
+  .hn-card:hover .hn-go { color:var(--gold); }
+
+  .home-footer { padding:16px 52px; border-top:1px solid var(--border); display:flex; justify-content:space-between; }
+  .home-footer p { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); }
+
+  /* ══ SUB TOPBAR ══ */
+  .sub-topbar { display:flex; align-items:center; gap:14px; padding:0 36px; height:56px; border-bottom:1px solid var(--border); background:var(--bg2); }
+  .sub-home-btn { background:none; border:none; cursor:pointer; font-family:inherit; color:var(--text2); font-size:12px; letter-spacing:1.5px; text-transform:uppercase; padding:6px 0; transition:color .12s; }
+  .sub-home-btn:hover { color:var(--gold); }
+  .sub-div   { color:var(--border2); font-size:16px; }
+  .sub-title { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text); font-weight:600; }
+  .sub-link  { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); cursor:pointer; transition:color .12s; }
+  .sub-link:hover { color:var(--gold); }
+  .sub-right { margin-left:auto; font-size:11px; letter-spacing:1px; color:var(--text3); }
+
+  /* ══ ROOMS LIST ══ */
+  #page-rooms .inner { padding:32px 36px 48px; }
+  .rooms-kpi { display:inline-flex; align-items:baseline; gap:12px; border:1px solid var(--border); border-left:3px solid var(--gold); padding:14px 26px; margin-bottom:28px; background:var(--bg2); }
+  .rooms-kpi-val { font-size:36px; font-weight:300; color:var(--gold2); letter-spacing:1px; line-height:1; }
+  .rooms-kpi-lbl { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); }
+
+  .section-head { display:flex; align-items:center; gap:14px; margin-bottom:20px; }
+  .sec-title { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--text2); white-space:nowrap; font-weight:600; }
+  .sec-line  { flex:1; height:1px; background:var(--border); }
+  .sec-tag   { font-size:10px; letter-spacing:1.5px; color:var(--gold); border:1px solid var(--border2); padding:4px 12px; white-space:nowrap; }
+
+  .room-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); }
+  .room-card { background:var(--bg2); display:flex; flex-direction:column; cursor:pointer; transition:background .15s,transform .15s; position:relative; }
+  .room-card:hover { background:var(--bg3); }
+  .room-card:hover { box-shadow:inset 0 0 0 1px var(--border2); }
+  .room-hdr { padding:20px 22px 16px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:14px; }
+  .r-accent { width:4px; flex-shrink:0; align-self:stretch; border-radius:2px; }
+  .r801   .r-accent{background:#8a9ad8} .r1408  .r-accent{background:#6aba8a}
+  .rJTBC  .r-accent{background:#c07a7a} .r1903  .r-accent{background:#9a7aba}
+  .r1201a .r-accent{background:#c09a6a} .r1201b .r-accent{background:#7a9aba}
+  .room-info  { flex:1; }
+  .room-name    { font-size:16px; font-weight:700; margin-bottom:5px; color:var(--text); letter-spacing:.2px; }
+  .room-manager { font-size:13px; color:var(--text2); margin-bottom:3px; }
+  .room-phone   { font-size:11px; color:var(--text3); }
+  .mac-cnt { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--gold); padding-top:2px; white-space:nowrap; font-weight:700; }
+  .room-body { padding:16px 22px 20px; }
+  .ms-label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
+  .ms-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .ms-chip { background:var(--bg3); border:1px solid var(--border); padding:6px 11px; display:flex; align-items:center; gap:5px; font-family:'SF Mono','Fira Code',ui-monospace,monospace; font-size:11px; font-weight:600; color:var(--text2); transition:border-color .1s,color .1s,background .1s; }
+  .ms-chip:hover { border-color:var(--border2); color:var(--text); }
+  .ms-chip.sp { color:var(--gold); border-color:rgba(212,196,156,.3); }
+  .cdot { width:5px; height:5px; border-radius:50%; background:#50aa60; flex-shrink:0; }
+  .room-card-arrow { padding:12px 22px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); border-top:1px solid var(--border); display:flex; justify-content:flex-end; align-items:center; gap:6px; transition:color .12s,gap .15s; }
+  .room-card:hover .room-card-arrow { color:var(--gold); gap:10px; }
+
+  /* ══ ROOM DETAIL ══ */
+  #page-room-detail .inner { padding:32px 36px 52px; }
+  .detail-header { display:flex; align-items:flex-start; gap:20px; margin-bottom:32px; padding-bottom:26px; border-bottom:1px solid var(--border); }
+  .detail-accent { width:5px; height:68px; border-radius:2px; flex-shrink:0; margin-top:3px; }
+  .detail-room-name { font-size:28px; font-weight:700; letter-spacing:.3px; margin-bottom:8px; color:var(--text); }
+  .detail-manager   { font-size:15px; color:var(--text2); margin-bottom:4px; }
+  .detail-phone     { font-size:13px; color:var(--text3); }
+
+  .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; }
+
+  /* Mac Studio + 계정 테이블 */
+  .mac-table-wrap { border:1px solid var(--border); }
+  .mac-table-hdr { padding:12px 18px; background:var(--bg2); border-bottom:1px solid var(--border); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text2); font-weight:600; }
+  .mac-row { display:flex; align-items:center; border-bottom:1px solid var(--border); transition:background .1s; }
+  .mac-row:last-child { border-bottom:none; }
+  .mac-row:hover { background:var(--bg3); }
+  .mac-cell-id {
+    padding:14px 18px; width:140px; flex-shrink:0;
+    font-family:'SF Mono','Fira Code',ui-monospace,monospace;
+    font-size:13px; font-weight:700; color:var(--text2);
+    border-right:1px solid var(--border);
+  }
+  .mac-cell-id.sp { color:var(--gold); }
+  .mac-cell-acct { padding:14px 18px; flex:1; }
+  .acct-name { font-family:'SF Mono','Fira Code',ui-monospace,monospace; font-size:13px; color:var(--text); font-weight:600; }
+  .acct-type { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.5px; padding:3px 8px; margin-left:8px; border-radius:2px; }
+  .type-bl { background:#1a2e4a; color:#90c0e8; border:1px solid #28406a; }
+  .type-gy { background:#2e2410; color:#d8b860; border:1px solid #503c18; }
+  .share-note { font-size:11px; color:var(--gold); margin-top:5px; opacity:.9; }
+
+  /* 이슈 트래커 */
+  .issue-wrap { border:1px solid var(--border); }
+  .issue-hdr { padding:12px 18px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  .issue-hdr-title { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text2); flex:1; font-weight:600; }
+  .issue-cnt { font-size:12px; color:var(--gold); font-weight:700; }
+
+  .issue-item { padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:13px; transition:background .1s; }
+  .issue-item:last-child { border-bottom:none; }
+  .issue-item:hover { background:var(--bg3); }
+  .issue-severity { width:4px; align-self:stretch; flex-shrink:0; border-radius:2px; }
+  .sev-high   { background:#e05050; }
+  .sev-medium { background:#d09840; }
+  .sev-low    { background:#48b060; }
+  .sev-info   { background:#4890c8; }
+  .issue-body { flex:1; min-width:0; }
+  .issue-title { font-size:14px; font-weight:600; margin-bottom:4px; color:var(--text); }
+  .issue-meta  { font-size:11px; color:var(--text3); letter-spacing:.3px; }
+  .issue-desc  { font-size:12px; color:var(--text2); margin-top:6px; line-height:1.6; }
+  .issue-del { width:26px; height:26px; background:none; border:1px solid var(--border); color:var(--text3); cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .1s; }
+  .issue-del:hover { border-color:#a04040; color:#e08080; background:#2a1818; }
+  .issue-empty { padding:24px 18px; font-size:13px; color:var(--text3); text-align:center; letter-spacing:.5px; }
+
+  /* Issue add form */
+  .issue-add { padding:16px 18px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,.15); }
+  .issue-add-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); margin-bottom:2px; }
+  .ii { background:var(--bg2); border:1px solid var(--border); padding:9px 12px; font-size:13px; color:var(--text); font-family:inherit; outline:none; width:100%; transition:border-color .15s; }
+  .ii::placeholder { color:var(--text3); }
+  .ii:focus { border-color:var(--gold); }
+  .ii-row { display:flex; gap:7px; }
+  .ii-sel { flex:1; background:var(--bg2); border:1px solid var(--border); padding:9px 12px; font-size:13px; color:var(--text); font-family:inherit; outline:none; }
+  .ii-add { background:transparent; border:1px solid var(--gold); color:var(--gold); padding:9px 16px; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; font-family:inherit; cursor:pointer; transition:all .15s; white-space:nowrap; }
+  .ii-add:hover { background:var(--gold); color:var(--bg); }
+
+  /* ══ SCHEDULE ══ */
+  #page-schedule .inner { padding:32px 36px 48px; }
+  .sched-layout { display:grid; grid-template-columns:1fr 320px; gap:22px; align-items:start; }
+  .cal-wrap { border:1px solid var(--border); overflow:hidden; }
+  .cal-hdr { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; background:var(--bg2); }
+  .cal-m { font-size:18px; font-weight:600; letter-spacing:.5px; color:var(--text); }
+  .cal-y { font-size:14px; color:var(--text2); letter-spacing:1px; }
+  .cal-nav { display:flex; gap:6px; margin-left:auto; }
+  .cal-nav-btn { width:34px; height:34px; background:none; border:1px solid var(--border); color:var(--text2); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition:all .1s; }
+  .cal-nav-btn:hover { border-color:var(--gold); color:var(--gold); background:var(--bg3); }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); }
+  .cal-dow { padding:11px 0; text-align:center; font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); border-bottom:1px solid var(--border); background:var(--bg2); }
+  .cal-dow:first-child{color:#d09090} .cal-dow:last-child{color:#9090c8}
+  .cal-day { padding:9px 10px; min-height:96px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); cursor:pointer; transition:background .15s; }
+  .cal-day:nth-child(7n){border-right:none}
+  .cal-day:hover{background:var(--bg3)}
+  .cal-day.other-month{opacity:.15;pointer-events:none}
+  .cal-day.selected{background:var(--bg3);box-shadow:inset 0 0 0 1px var(--gold)}
+  .cal-day.today .day-num{background:var(--gold);color:#111315;font-weight:700;border-radius:50%}
+  .day-num { font-size:14px; font-weight:500; width:28px; height:28px; display:flex; align-items:center; justify-content:center; margin-bottom:6px; border-radius:50%; color:var(--text); }
+  .cal-day:nth-child(7n+1) .day-num{color:#d09090} .cal-day:nth-child(7n) .day-num{color:#9090c8}
+  .cal-day.today:nth-child(7n+1) .day-num,.cal-day.today:nth-child(7n) .day-num{color:#111315}
+  .day-events{display:flex;flex-direction:column;gap:3px}
+  .day-event{font-size:11px;font-weight:500;padding:3px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid;border-radius:2px}
+  .ev-red{background:#4a2020;color:#f0a0a0;border-color:#d06060}
+  .ev-blue{background:#1e3350;color:#90c8f0;border-color:#4898d0}
+  .ev-green{background:#1e3828;color:#80d898;border-color:#40a860}
+  .ev-yellow{background:#3a2a10;color:#f0c060;border-color:#c09030}
+  .ev-purple{background:#321848;color:#c8a8f0;border-color:#9860d8}
+  .events-panel{border:1px solid var(--border);background:var(--bg2)}
+  .ev-hdr{padding:16px 18px;border-bottom:1px solid var(--border)}
+  .ev-hdr h3{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text2);margin-bottom:4px;font-weight:700}
+  .ev-hdr p{font-size:12px;color:var(--text3)}
+  .event-item{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:11px;align-items:flex-start;transition:background .1s}
+  .event-item:hover{background:var(--bg3)}
+  .ev-bar{width:3px;align-self:stretch;flex-shrink:0;border-radius:1px}
+  .ev-info{flex:1;min-width:0}
+  .ev-date{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+  .ev-title{font-size:14px;font-weight:600;color:var(--text)}
+  .ev-desc{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5}
+  .del-btn{width:26px;height:26px;background:none;border:1px solid var(--border);color:var(--text3);cursor:pointer;font-size:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .1s}
+  .del-btn:hover{border-color:#a04040;color:#e08080;background:#2a1818}
+  .ev-empty{padding:24px 16px;font-size:13px;color:var(--text3);text-align:center;letter-spacing:.5px}
+  .add-area{padding:16px;background:rgba(0,0,0,.12)}
+  .add-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;font-weight:600}
+  .form-col{display:flex;flex-direction:column;gap:8px}
+  .fi{background:var(--bg);border:1px solid var(--border);padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit;outline:none;width:100%;transition:border-color .15s}
+  .fi::placeholder{color:var(--text3)}
+  .fi:focus{border-color:var(--gold)}
+  .fi.highlight{border-color:var(--gold)!important;transition:none}
+  .frow{display:flex;gap:7px}
+  .fsel{flex:1;background:var(--bg);border:1px solid var(--border);padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit;outline:none}
+  .fadd{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:9px 16px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap}
+  .fadd:hover{background:var(--gold);color:var(--bg)}
+
+  /* ══ MODAL ══ */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:200;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .modal-overlay.open { opacity:1; pointer-events:auto; }
+  .modal-box {
+    background:var(--bg2); border:1px solid var(--border2);
+    width:500px; max-width:92vw; max-height:76vh;
+    display:flex; flex-direction:column;
+    transform:translateY(14px); transition:transform .22s ease;
+    box-shadow:0 24px 60px rgba(0,0,0,.6);
+  }
+  .modal-overlay.open .modal-box { transform:none; }
+  .modal-head {
+    padding:20px 24px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:14px; flex-shrink:0;
+  }
+  .modal-head-bar { width:3px; height:20px; background:var(--gold); border-radius:1px; flex-shrink:0; }
+  .modal-title { font-size:11px; letter-spacing:2.5px; text-transform:uppercase; color:var(--text2); font-weight:700; flex:1; }
+  .modal-month { font-size:13px; color:var(--gold); font-weight:600; }
+  .modal-close {
+    background:none; border:1px solid var(--border); color:var(--text3);
+    width:30px; height:30px; cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center; transition:all .12s;
+  }
+  .modal-close:hover { border-color:var(--border2); color:var(--text); background:var(--bg3); }
+  .modal-body { overflow-y:auto; flex:1; }
+  .modal-body::-webkit-scrollbar { width:4px; }
+  .modal-body::-webkit-scrollbar-track { background:transparent; }
+  .modal-body::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+  .modal-empty { padding:44px 24px; text-align:center; font-size:13px; color:var(--text3); letter-spacing:.5px; }
+  .modal-ev-cnt { padding:14px 24px 10px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); border-bottom:1px solid var(--border); }
+
+  /* 클릭 가능 stat */
+  .home-stat-clickable { cursor:pointer; }
+  .home-stat-clickable:hover { background:var(--bg3); }
+  .home-stat-clickable .h-stat-lbl::after { content:' ›'; color:var(--gold); opacity:.7; }
+
+  /* ══ 화면 크기 일관성 - max-width 제한 ══ */
+  .inner { max-width:1360px; margin:0 auto; }
+  .home-hero-inner { width:100%; max-width:680px; display:flex; flex-direction:column; align-items:center; }
+  .home-stats { width:100%; max-width:680px; }
+  .home-nav   { max-width:680px; }
+
+  @media(max-width:960px){.room-grid{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}}
+  @media(max-width:640px){.room-grid{grid-template-columns:1fr}.home-nav{grid-template-columns:1fr}.sched-layout{grid-template-columns:1fr}.home-bar,.home-footer{padding-left:24px;padding-right:24px}.home-hero{padding:40px 24px 30px}}
+</style>
+</head>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<body>
+
+<!-- ══ HOME ══ -->
+<div class="page active" id="page-home">
+  <div class="home-bar">
+    <div class="home-bar-date" id="home-date"></div>
+    <div class="live-pill"><div class="live-dot"></div>Operating</div>
+  </div>
+  <div class="home-hero">
+    <div class="home-hero-inner">
+      <div class="blast-logo">
+        <div class="blast-wordmark">BLAST</div>
+        <div class="blast-sub">Post Production</div>
+      </div>
+      <div class="blast-rule"></div>
+      <div class="home-stats">
+        <div class="home-stat"><div class="h-stat-val">6</div><div class="h-stat-lbl">호실</div></div>
+        <div class="home-stat"><div class="h-stat-val">29</div><div class="h-stat-lbl">Mac Studio</div></div>
+        <div class="home-stat home-stat-clickable" onclick="showMonthlyEventsModal()">
+          <div class="h-stat-val" id="home-ev-cnt">—</div>
+          <div class="h-stat-lbl">이달 일정</div>
+        </div>
+      </div>
+      <div class="home-nav">
+        <div class="hn-card" onclick="showPage('rooms')">
+          <div class="hn-tag">Equipment</div>
+          <div class="hn-title">편집실 현황</div>
+          <div class="hn-go">View Details →</div>
+        </div>
+        <div class="hn-card" onclick="showPage('schedule')">
+          <div class="hn-tag">Schedule</div>
+          <div class="hn-title">일정 관리</div>
+          <div class="hn-go">View Calendar →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="home-footer">
+    <p>BLAST Post Production · Equipment Dashboard</p>
+    <p>2026</p>
+  </div>
+</div>
+
+<!-- ══ MONTHLY EVENTS MODAL ══ -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-bar"></div>
+      <div class="modal-title">이달 일정</div>
+      <div class="modal-month" id="modal-month-label"></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-ev-cnt" id="modal-ev-cnt"></div>
+    <div class="modal-body" id="modal-ev-list"></div>
+  </div>
+</div>
+
+<!-- ══ ROOMS LIST ══ -->
+<div class="page" id="page-rooms">
+  <div class="sub-topbar">
+    <button class="sub-home-btn" onclick="showPage('home')">← Home</button>
+    <span class="sub-div">/</span>
+    <span class="sub-title">편집실 현황</span>
+  </div>
+  <div class="inner">
+    <div class="rooms-kpi">
+      <span class="rooms-kpi-val">29</span>
+      <span class="rooms-kpi-lbl">Mac Studio &nbsp;·&nbsp; 6개 호실 운용 중</span>
+    </div>
+    <div class="section-head">
+      <div class="sec-title">Room Layout</div><div class="sec-line"></div><div class="sec-tag">총 29대</div>
+    </div>
+    <div class="room-grid">
+
+      <div class="room-card r801" onclick="openRoom('r801')">
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">1단지 801호</div><div class="room-manager">금초롱</div><div class="room-phone">010-7635-3101</div></div><div class="mac-cnt">Mac × 5</div></div>
+        <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-08</div><div class="ms-chip"><div class="cdot"></div>BM-MS-09</div><div class="ms-chip"><div class="cdot"></div>BM-MS-10</div><div class="ms-chip"><div class="cdot"></div>BM-MS-11</div><div class="ms-chip"><div class="cdot"></div>BM-MS-23</div></div></div>
+        <div class="room-card-arrow">상세보기 →</div>
+      </div>
+
+      <div class="room-card r1408" onclick="openRoom('r1408')">
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">1단지 1408호</div><div class="room-manager">안연정</div><div class="room-phone">010-3612-0758</div></div><div class="mac-cnt">Mac × 5</div></div>
+        <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-06</div><div class="ms-chip"><div class="cdot"></div>BM-MS-12</div><div class="ms-chip"><div class="cdot"></div>BM-MS-18</div><div class="ms-chip"><div class="cdot"></div>BM-MS-24</div><div class="ms-chip"><div class="cdot"></div>BM-MS-29</div></div></div>
+        <div class="room-card-arrow">상세보기 →</div>
+      </div>
+
+      <div class="room-card rJTBC" onclick="openRoom('rJTBC')">
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">JTBC</div><div class="room-manager">허미정</div><div class="room-phone">010-3275-2289</div></div><div class="mac-cnt">Mac × 6</div></div>
+        <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-03</div><div class="ms-chip"><div class="cdot"></div>BM-MS-05</div><div class="ms-chip"><div class="cdot"></div>BM-MS-15</div><div class="ms-chip"><div class="cdot"></div>BM-MS-16</div><div class="ms-chip"><div class="cdot"></div>BM-MS-19</div><div class="ms-chip"><div class="cdot"></div>BM-MS-26</div></div></div>
+        <div class="room-card-arrow">상세보기 →</div>
+      </div>
+
+      <div class="room-card r1903" onclick="openRoom('r1903')">
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">2단지 1903호</div><div class="room-manager">강세나</div><div class="room-phone">010-5174-7311</div></div><div class="mac-cnt">Mac × 5</div></div>
+        <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-01</div><div class="ms-chip"><div class="cdot"></div>BM-MS-02</div><div class="ms-chip"><div class="cdot"></div>BM-MS-13</div><div class="ms-chip"><div class="cdot"></div>BM-MS-14</div><div class="ms-chip"><div class="cdot"></div>BM-MS-17</div></div></div>
+        <div class="room-card-arrow">상세보기 →</div>
+      </div>
+
+      <div class="room-card r1201a" onclick="openRoom('r1201a')">
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">1단지 1201호</div><div class="room-manager">배지윤 / 여태현</div><div class="room-phone">010-7473-1998 / 010-8904-2897</div></div><div class="mac-cnt">Mac × 6</div></div>
+        <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-20</div><div class="ms-chip"><div class="cdot"></div>BM-MS-21</div><div class="ms-chip"><div class="cdot"></div>BM-MS-25</div><div class="ms-chip"><div class="cdot"></div>BM-MS-27</div><div class="ms-chip"><div class="cdot"></div>BM-MS-28</div><div class="ms-chip sp"><div class="cdot" style="background:var(--gold)"></div>blast_30</div></div></div>
+        <div class="room-card-arrow">상세보기 →</div>
+      </div>
+
+      <div class="room-card r1201b" onclick="openRoom('r1201b')">
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">2단지 1201호</div><div class="room-manager">임학원</div><div class="room-phone">010-8773-4231</div></div><div class="mac-cnt">Mac × 2</div></div>
+        <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-07</div><div class="ms-chip"><div class="cdot"></div>BM-MS-22</div></div></div>
+        <div class="room-card-arrow">상세보기 →</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ ROOM DETAIL ══ -->
+<div class="page" id="page-room-detail">
+  <div class="sub-topbar">
+    <button class="sub-home-btn" onclick="showPage('home')">← Home</button>
+    <span class="sub-div">/</span>
+    <span class="sub-link" onclick="showPage('rooms')">편집실 현황</span>
+    <span class="sub-div">/</span>
+    <span class="sub-title" id="detail-breadcrumb"></span>
+  </div>
+  <div class="inner">
+    <div class="detail-header">
+      <div class="detail-accent" id="detail-accent"></div>
+      <div>
+        <div class="detail-room-name" id="detail-room-name"></div>
+        <div class="detail-manager"   id="detail-manager"></div>
+        <div class="detail-phone"     id="detail-phone"></div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Mac Studio + Premier Pro 계정 -->
+      <div>
+        <div class="section-head" style="margin-bottom:12px">
+          <div class="sec-title">Mac Studio · Premier Pro</div><div class="sec-line"></div>
+        </div>
+        <div class="mac-table-wrap">
+          <div class="mac-table-hdr">Mac Studio &nbsp;/&nbsp; 계정 &nbsp;/&nbsp; 구독 유형</div>
+          <div id="detail-mac-list"></div>
+        </div>
+      </div>
+
+      <!-- 이슈 트래커 -->
+      <div>
+        <div class="section-head" style="margin-bottom:12px">
+          <div class="sec-title">Issue Tracker</div><div class="sec-line"></div>
+          <div class="issue-cnt" id="issue-cnt-badge"></div>
+        </div>
+        <div class="issue-wrap">
+          <div id="issue-list"></div>
+          <div class="issue-add">
+            <div class="issue-add-lbl">이슈 추가</div>
+            <input  class="ii" id="issue-title" type="text" placeholder="이슈 제목" />
+            <textarea class="ii" id="issue-desc" placeholder="상세 내용 (선택)" rows="2" style="resize:vertical;font-family:inherit"></textarea>
+            <div class="ii-row">
+              <select class="ii-sel" id="issue-sev">
+                <option value="sev-high">🔴 긴급</option>
+                <option value="sev-medium" selected>🟡 주의</option>
+                <option value="sev-low">🟢 낮음</option>
+                <option value="sev-info">🔵 참고</option>
+              </select>
+              <button class="ii-add" onclick="addIssue()">추가</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCHEDULE ══ -->
+<div class="page" id="page-schedule">
+  <div class="sub-topbar">
+    <button class="sub-home-btn" onclick="showPage('home')">← Home</button>
+    <span class="sub-div">/</span>
+    <span class="sub-title">일정 관리</span>
+    <div class="sub-right" id="ev-chip-top"></div>
+  </div>
+  <div class="inner">
+    <div class="sched-layout">
+      <div class="cal-wrap">
+        <div class="cal-hdr">
+          <span class="cal-m" id="cal-m"></span>
+          <span style="color:var(--border2);margin:0 5px;">/</span>
+          <span class="cal-y" id="cal-y"></span>
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+            <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="cal-grid">
+          <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div>
+          <div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div>
+        </div>
+      </div>
+      <div class="events-panel">
+        <div class="ev-hdr"><h3>Schedule</h3><p id="ev-month-lbl"></p></div>
+        <div id="events-list"></div>
+        <div class="add-area">
+          <div class="add-lbl">Add Event</div>
+          <div class="form-col">
+            <input class="fi" id="new-date"  type="date" />
+            <input class="fi" id="new-title" type="text" placeholder="일정 제목" />
+            <input class="fi" id="new-desc"  type="text" placeholder="설명 (선택)" />
+            <div class="frow">
+              <select class="fsel" id="new-color">
+                <option value="ev-blue">일반</option>
+                <option value="ev-green">완료</option>
+                <option value="ev-yellow">갱신</option>
+                <option value="ev-red">만료 / 긴급</option>
+                <option value="ev-purple">점검</option>
+              </select>
+              <button class="fadd" onclick="addEvent()">추가</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── 날짜 ── */
+const DAYS_KO   = ['일','월','화','수','목','금','토'];
+const MONTHS_KO = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const NOW = new Date();
+document.getElementById('home-date').textContent =
+  NOW.getFullYear()+' . '+String(NOW.getMonth()+1).padStart(2,'0')+' . '+
+  String(NOW.getDate()).padStart(2,'0')+'  ('+DAYS_KO[NOW.getDay()]+')';
+
+/* ── 네비게이션 ── */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if (id==='home')     updateHomeCount();
+  if (id==='schedule') renderCalendar();
+  window.scrollTo(0,0);
+}
+
+/* ══════════════════════════════
+   호실 데이터
+══════════════════════════════ */
+const ROOMS = {
+  r801: {
+    name:'1단지 801호', manager:'금초롱', phone:'010-7635-3101', accent:'#6a7ab8',
+    macs:[
+      {id:'BM-MS-08', acct:'blastedit18',  type:'개y'},
+      {id:'BM-MS-09', acct:'blastedit030', type:'개y'},
+      {id:'BM-MS-10', acct:'blastedit24',  type:'블'},
+      {id:'BM-MS-11', acct:'blastedit23',  type:'블'},
+      {id:'BM-MS-23', acct:'blastedit10',  type:'개y'},
+    ]
+  },
+  r1408: {
+    name:'1단지 1408호', manager:'안연정', phone:'010-3612-0758', accent:'#5a8a6a',
+    macs:[
+      {id:'BM-MS-06', acct:'blastedit01', type:'블', note:'⚠ 계정 공유 (1201호 blast_30)'},
+      {id:'BM-MS-12', acct:'blastedit16', type:'블'},
+      {id:'BM-MS-18', acct:'blastedit07', type:'블'},
+      {id:'BM-MS-24', acct:'blastedit04', type:'블'},
+      {id:'BM-MS-29', acct:'blastedit20', type:'블'},
+    ]
+  },
+  rJTBC: {
+    name:'JTBC', manager:'허미정', phone:'010-3275-2289', accent:'#8a5a5a',
+    macs:[
+      {id:'BM-MS-03', acct:'blastedit17',  type:'개y'},
+      {id:'BM-MS-05', acct:'blastedit02',  type:'—'},
+      {id:'BM-MS-15', acct:'blastedit06',  type:'—'},
+      {id:'BM-MS-16', acct:'blastedit03',  type:'—'},
+      {id:'BM-MS-19', acct:'blastedit037', type:'—'},
+      {id:'BM-MS-26', acct:'blastedit036', type:'—'},
+    ]
+  },
+  r1903: {
+    name:'2단지 1903호', manager:'강세나', phone:'010-5174-7311', accent:'#7a5a8a',
+    macs:[
+      {id:'BM-MS-01', acct:'blastedit032', type:'블'},
+      {id:'BM-MS-02', acct:'blastedit035', type:'블'},
+      {id:'BM-MS-13', acct:'blastedit034', type:'개y'},
+      {id:'BM-MS-14', acct:'blastedit25',  type:'블'},
+      {id:'BM-MS-17', acct:'blastedit033', type:'블'},
+    ]
+  },
+  r1201a: {
+    name:'1단지 1201호', manager:'배지윤 / 여태현', phone:'010-7473-1998 / 010-8904-2897', accent:'#8a7a5a',
+    macs:[
+      {id:'BM-MS-20', acct:'blastedit09', type:'개y'},
+      {id:'BM-MS-21', acct:'blastedit19', type:'블'},
+      {id:'BM-MS-25', acct:'blastedit12', type:'개y'},
+      {id:'BM-MS-27', acct:'blastedit13', type:'블'},
+      {id:'BM-MS-28', acct:'blastedit15', type:'블'},
+      {id:'blast_30',  acct:'blastedit01', type:'블', special:true, note:'⚠ 계정 공유 (1408호 BM-MS-06)'},
+    ]
+  },
+  r1201b: {
+    name:'2단지 1201호', manager:'임학원', phone:'010-8773-4231', accent:'#5a7a8a',
+    macs:[
+      {id:'BM-MS-07', acct:'blastedit08',  type:'개y'},
+      {id:'BM-MS-22', acct:'blastedit038', type:'개y'},
+    ]
+  },
+};
+
+/* ── Firebase 초기화 ── */
+const firebaseConfig = {
+  apiKey: "AIzaSyA-cX23vz6holDnYjynpxIB66UpT5VgsGc",
+  authDomain: "blast-dashboard.firebaseapp.com",
+  projectId: "blast-dashboard",
+  storageBucket: "blast-dashboard.firebasestorage.app",
+  messagingSenderId: "118855130627",
+  appId: "1:118855130627:web:f9ff7ef16e34a602a03836"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* 이슈 (Firestore) */
+let currentRoom = null;
+let issueUnsub  = null;
+
+function openRoom(roomKey) {
+  currentRoom = roomKey;
+  const r = ROOMS[roomKey];
+
+  document.getElementById('detail-breadcrumb').textContent = r.name;
+  document.getElementById('detail-room-name').textContent  = r.name;
+  document.getElementById('detail-manager').textContent    = '담당자: ' + r.manager;
+  document.getElementById('detail-phone').textContent      = r.phone;
+  document.getElementById('detail-accent').style.background = r.accent;
+
+  /* Mac 테이블 */
+  const macList = document.getElementById('detail-mac-list');
+  macList.innerHTML = r.macs.map(m => `
+    <div class="mac-row">
+      <div class="mac-cell-id ${m.special?'sp':''}">${m.id}</div>
+      <div class="mac-cell-acct">
+        <div>
+          <span class="acct-name">${m.acct}</span>
+          ${m.type!=='—'?`<span class="acct-type ${m.type==='블'?'type-bl':'type-gy'}">${m.type}</span>`:''}
+        </div>
+        ${m.note?`<div class="share-note">${m.note}</div>`:''}
+      </div>
+    </div>`).join('');
+
+  /* 이슈 실시간 리스너 */
+  if (issueUnsub) issueUnsub();
+  issueUnsub = db.collection('issues')
+    .where('roomKey','==',roomKey)
+    .onSnapshot(snap => {
+      const issues = snap.docs.map(d=>({id:d.id,...d.data()}));
+      issues.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      renderIssues(issues);
+    }, err => console.error('Issues error:', err));
+
+  showPage('room-detail');
+}
+
+function renderIssues(issues) {
+  if (!currentRoom) return;
+  const list  = document.getElementById('issue-list');
+  const badge = document.getElementById('issue-cnt-badge');
+  if (badge) badge.textContent = issues.length ? issues.length+'개' : '';
+  const sevLabel = {'sev-high':'긴급','sev-medium':'주의','sev-low':'낮음','sev-info':'참고'};
+  if (!issues.length) { list.innerHTML = '<div class="issue-empty">등록된 이슈 없음</div>'; return; }
+  list.innerHTML = issues.map(iss => `
+    <div class="issue-item">
+      <div class="issue-severity ${iss.sev}"></div>
+      <div class="issue-body">
+        <div class="issue-title">${iss.title}</div>
+        <div class="issue-meta">${iss.date} &nbsp;·&nbsp; ${sevLabel[iss.sev]||''}</div>
+        ${iss.desc?`<div class="issue-desc">${iss.desc}</div>`:''}
+      </div>
+      <button class="issue-del" onclick="deleteIssue('${iss.id}')">✕</button>
+    </div>`).join('');
+}
+
+function addIssue() {
+  const title = document.getElementById('issue-title').value.trim();
+  const desc  = document.getElementById('issue-desc').value.trim();
+  const sev   = document.getElementById('issue-sev').value;
+  if (!title || !currentRoom) return;
+  const today = NOW.getFullYear()+'.'+String(NOW.getMonth()+1).padStart(2,'0')+'.'+String(NOW.getDate()).padStart(2,'0');
+  db.collection('issues').add({ roomKey:currentRoom, title, desc, sev, date:today, createdAt:firebase.firestore.FieldValue.serverTimestamp() });
+  document.getElementById('issue-title').value = '';
+  document.getElementById('issue-desc').value  = '';
+}
+
+function deleteIssue(id) {
+  db.collection('issues').doc(id).delete();
+}
+
+/* ══════════════════════════════
+   일정 (Firestore)
+══════════════════════════════ */
+let calEvents = [];
+const barColor = {'ev-red':'#8a4a4a','ev-blue':'#4a6a8a','ev-green':'#4a6a4a','ev-yellow':'#8a7040','ev-purple':'#6a4a8a'};
+const SEED_EVENTS = [
+  {date:'2026-03-09',title:'블 구독 갱신',   desc:'블루 계정 (15개) Adobe 갱신 완료',color:'ev-green'},
+  {date:'2026-04-17',title:'개y 구독 시작',  desc:'개인 계정 구독 기간 시작',         color:'ev-blue'},
+  {date:'2026-05-06',title:'개y 구독 만료',  desc:'blastedit030/18/10/034/12/09/08/038/17',color:'ev-red'},
+  {date:'2026-05-20',title:'장비 정기 점검', desc:'전 호실 Mac Studio 상태 확인',      color:'ev-purple'},
+  {date:'2026-06-01',title:'임대 계약 검토', desc:'렌탈 계약 갱신 여부 확인',          color:'ev-yellow'},
+];
+
+/* 일정 실시간 리스너 */
+db.collection('events').onSnapshot(snap => {
+  if (snap.empty) {
+    const batch = db.batch();
+    SEED_EVENTS.forEach(e => batch.set(db.collection('events').doc(), e));
+    batch.commit();
+    return;
+  }
+  calEvents = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  calEvents.sort((a,b)=>a.date.localeCompare(b.date));
+  renderCalendar();
+  updateHomeCount();
+}, err => console.error('Events error:', err));
+
+function updateHomeCount() {
+  const p = NOW.getFullYear()+'-'+String(NOW.getMonth()+1).padStart(2,'0');
+  const el = document.getElementById('home-ev-cnt');
+  if (el) el.textContent = calEvents.filter(e=>e.date.startsWith(p)).length;
+}
+function deleteEvent(id) { db.collection('events').doc(id).delete(); }
+function addEvent() {
+  const date=document.getElementById('new-date').value;
+  const title=document.getElementById('new-title').value.trim();
+  const desc=document.getElementById('new-desc').value.trim();
+  const color=document.getElementById('new-color').value;
+  if(!date||!title){alert('날짜와 제목을 입력해주세요.');return;}
+  db.collection('events').add({date,title,desc,color});
+  document.getElementById('new-date').value='';
+  document.getElementById('new-title').value='';
+  document.getElementById('new-desc').value='';
+  const [y,m]=date.split('-').map(Number); curY=y; curM=m-1;
+}
+
+let curY=2026, curM=4;
+function changeMonth(d){curM+=d;if(curM<0){curM=11;curY--;}if(curM>11){curM=0;curY++;}renderCalendar();}
+function onDayClick(ds){
+  const inp=document.getElementById('new-date');
+  inp.value=ds; inp.classList.add('highlight');
+  setTimeout(()=>inp.classList.remove('highlight'),700);
+  document.getElementById('new-title').focus();
+  renderCalendar();
+}
+function renderCalendar(){
+  const el=id=>document.getElementById(id);
+  if(el('cal-m'))el('cal-m').textContent=MONTHS_KO[curM];
+  if(el('cal-y'))el('cal-y').textContent=curY;
+  if(el('ev-month-lbl'))el('ev-month-lbl').textContent=curY+'년 '+MONTHS_KO[curM];
+  const prefix=curY+'-'+String(curM+1).padStart(2,'0');
+  const cnt=calEvents.filter(e=>e.date.startsWith(prefix)).length;
+  if(el('ev-chip-top'))el('ev-chip-top').textContent=cnt+'개 일정';
+  const grid=el('cal-grid'); if(!grid)return;
+  while(grid.children.length>7)grid.removeChild(grid.lastChild);
+  const today=new Date();
+  const firstDay=new Date(curY,curM,1).getDay();
+  const lastDate=new Date(curY,curM+1,0).getDate();
+  const prevLast=new Date(curY,curM,0).getDate();
+  const selDate=el('new-date')?el('new-date').value:'';
+  for(let i=firstDay-1;i>=0;i--){const d=document.createElement('div');d.className='cal-day other-month';d.innerHTML=`<div class="day-num">${prevLast-i}</div>`;grid.appendChild(d);}
+  for(let d=1;d<=lastDate;d++){
+    const ds=curY+'-'+String(curM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const isToday=(d===today.getDate()&&curM===today.getMonth()&&curY===today.getFullYear());
+    const isSel=(ds===selDate);
+    const c=document.createElement('div');
+    c.className='cal-day'+(isToday?' today':'')+(isSel?' selected':'');
+    const evHtml=calEvents.filter(e=>e.date===ds).map(e=>`<div class="day-event ${e.color}">${e.title}</div>`).join('');
+    c.innerHTML=`<div class="day-num">${d}</div><div class="day-events">${evHtml}</div>`;
+    c.addEventListener('click',()=>onDayClick(ds));
+    grid.appendChild(c);
+  }
+  const rem=(firstDay+lastDate)%7===0?0:7-(firstDay+lastDate)%7;
+  for(let d=1;d<=rem;d++){const c=document.createElement('div');c.className='cal-day other-month';c.innerHTML=`<div class="day-num">${d}</div>`;grid.appendChild(c);}
+  renderEventsList();
+}
+function renderEventsList(){
+  const list=document.getElementById('events-list'); if(!list)return;
+  const prefix=curY+'-'+String(curM+1).padStart(2,'0');
+  const mevs=calEvents.filter(e=>e.date.startsWith(prefix)).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!mevs.length){list.innerHTML='<div class="ev-empty">이달 일정 없음</div>';return;}
+  list.innerHTML=mevs.map(e=>{
+    const d=new Date(e.date+'T00:00:00');
+    const day=parseInt(e.date.split('-')[2]);
+    const dow=DAYS_KO[d.getDay()];
+    return `<div class="event-item"><div class="ev-bar" style="background:${barColor[e.color]||'#4a4c52'}"></div><div class="ev-info"><div class="ev-date">${curM+1}. ${day} (${dow})</div><div class="ev-title">${e.title}</div>${e.desc?`<div class="ev-desc">${e.desc}</div>`:''}</div><button class="del-btn" onclick="deleteEvent('${e.id}')">✕</button></div>`;
+  }).join('');
+}
+
+/* ── 이달 일정 모달 ── */
+function showMonthlyEventsModal() {
+  const p = NOW.getFullYear()+'-'+String(NOW.getMonth()+1).padStart(2,'0');
+  const evs = calEvents.filter(e=>e.date.startsWith(p)).sort((a,b)=>a.date.localeCompare(b.date));
+  document.getElementById('modal-month-label').textContent =
+    NOW.getFullYear()+'년 '+MONTHS_KO[NOW.getMonth()];
+  const cntEl = document.getElementById('modal-ev-cnt');
+  cntEl.textContent = evs.length ? '총 '+evs.length+'건' : '';
+  const list = document.getElementById('modal-ev-list');
+  if (!evs.length) {
+    list.innerHTML = '<div class="modal-empty">이달 등록된 일정이 없습니다</div>';
+  } else {
+    list.innerHTML = evs.map(e => {
+      const d   = new Date(e.date+'T00:00:00');
+      const day = parseInt(e.date.split('-')[2]);
+      const dow = DAYS_KO[d.getDay()];
+      const bc  = barColor[e.color]||'#4a4c52';
+      return `<div class="event-item">
+        <div class="ev-bar" style="background:${bc}"></div>
+        <div class="ev-info">
+          <div class="ev-date">${NOW.getMonth()+1}. ${day} (${dow})</div>
+          <div class="ev-title">${e.title}</div>
+          ${e.desc?`<div class="ev-desc">${e.desc}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+/* ESC 키로 닫기 */
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+/* ── Init ── */
+// updateHomeCount는 Firestore onSnapshot 콜백에서 자동 호출됨
+</script>
+</body>
+</html>
