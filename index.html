@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BLAST POST PRODUCTION</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d0f11">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BLAST">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <style>
   :root {
     --bg:      #0d0f11;
@@ -96,7 +103,8 @@
   .rJTBC  .r-accent{background:#c07a7a} .r1903  .r-accent{background:#9a7aba}
   .r1201a .r-accent{background:#c09a6a} .r1201b .r-accent{background:#7a9aba}
   .room-info  { flex:1; }
-  .room-name    { font-size:16px; font-weight:700; margin-bottom:5px; color:var(--text); letter-spacing:.2px; }
+  .room-name    { font-size:16px; font-weight:700; margin-bottom:3px; color:var(--text); letter-spacing:.2px; }
+  .room-project { font-size:11px; color:var(--gold); letter-spacing:.5px; margin-bottom:3px; font-weight:600; display:none; }
   .room-manager { font-size:13px; color:var(--text2); margin-bottom:3px; }
   .room-phone   { font-size:11px; color:var(--text3); }
   .mac-cnt { font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--gold); padding-top:2px; white-space:nowrap; font-weight:700; }
@@ -196,7 +204,8 @@
   .cal-day:nth-child(7n+1) .day-num{color:#d09090} .cal-day:nth-child(7n) .day-num{color:#9090c8}
   .cal-day.today:nth-child(7n+1) .day-num,.cal-day.today:nth-child(7n) .day-num{color:#111315}
   .day-events{display:flex;flex-direction:column;gap:3px}
-  .day-event{font-size:11px;font-weight:500;padding:3px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid;border-radius:2px}
+  .day-event{font-size:11px;font-weight:500;padding:3px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid;border-radius:2px;cursor:pointer;transition:filter .15s}
+  .day-event:hover{filter:brightness(1.3)}
   .ev-red{background:#4a2020;color:#f0a0a0;border-color:#d06060}
   .ev-blue{background:#1e3350;color:#90c8f0;border-color:#4898d0}
   .ev-green{background:#1e3828;color:#80d898;border-color:#40a860}
@@ -227,6 +236,64 @@
   .fsel{flex:1;background:var(--bg);border:1px solid var(--border);padding:9px 12px;font-size:13px;color:var(--text);font-family:inherit;outline:none}
   .fadd{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:9px 16px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap}
   .fadd:hover{background:var(--gold);color:var(--bg)}
+
+  /* ══ 오늘 버튼 ══ */
+  .cal-today-btn{background:none;border:1px solid var(--border);color:var(--text2);padding:6px 14px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-family:inherit;cursor:pointer;transition:all .15s;margin-left:8px}
+  .cal-today-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+  /* ══ 일정 추가/수정 모달 ══ */
+  .ev-modal-body{padding:20px 24px;display:flex;flex-direction:column;gap:12px}
+  .ev-modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  .ev-modal-cancel{background:none;border:1px solid var(--border);color:var(--text2);padding:9px 18px;font-size:12px;font-family:inherit;cursor:pointer;transition:all .15s}
+  .ev-modal-cancel:hover{border-color:var(--border2);color:var(--text)}
+  .color-swatches{display:flex;gap:10px;align-items:center;padding:6px 0}
+  .color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s,transform .1s;flex-shrink:0}
+  .color-swatch:hover{transform:scale(1.15)}
+  .color-swatch.active{border-color:#fff;transform:scale(1.15)}
+  .color-swatch.ev-blue{background:#4898d0}
+  .color-swatch.ev-green{background:#40a860}
+  .color-swatch.ev-yellow{background:#c09030}
+  .color-swatch.ev-red{background:#d06060}
+  .color-swatch.ev-purple{background:#9860d8}
+  .color-label{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+
+  /* ══ 날짜 시트 ══ */
+  .day-sheet-item{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .12s}
+  .day-sheet-item:hover{background:var(--bg3)}
+  .day-sheet-bar{width:4px;height:36px;border-radius:2px;flex-shrink:0}
+  .day-sheet-info{flex:1;min-width:0}
+  .day-sheet-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .day-sheet-desc{font-size:12px;color:var(--text3)}
+  .day-sheet-acts{display:flex;gap:6px;flex-shrink:0}
+  .ds-btn{width:28px;height:28px;background:none;border:1px solid var(--border);color:var(--text3);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .1s}
+  .ds-btn.edit:hover{border-color:var(--gold);color:var(--gold)}
+  .ds-btn.del:hover{border-color:#a04040;color:#e08080;background:#2a1818}
+  .day-sheet-add{padding:14px 20px;display:flex;justify-content:center}
+  .day-sheet-empty{padding:32px 20px;text-align:center;color:var(--text3);font-size:13px}
+
+  /* ══ 이벤트 팝오버 ══ */
+  .ev-popover{position:fixed;z-index:500;background:var(--bg2);border:1px solid var(--border2);width:260px;box-shadow:0 16px 48px rgba(0,0,0,.7);pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .18s,transform .18s}
+  .ev-popover.open{pointer-events:auto;opacity:1;transform:none}
+  .ev-popover-bar{height:4px;border-radius:0}
+  .ev-popover-body{padding:14px 16px}
+  .ev-popover-close{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1;padding:2px 6px;transition:color .1s}
+  .ev-popover-close:hover{color:var(--text)}
+  .ev-popover-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;padding-right:24px}
+  .ev-popover-meta{font-size:11px;color:var(--text3);letter-spacing:.5px;margin-bottom:4px}
+  .ev-popover-desc{font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5;min-height:4px}
+  .ev-popover-actions{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px;margin-top:8px}
+  .evp-toggle{width:100%;padding:11px;font-size:12px;letter-spacing:1px;text-transform:uppercase;font-family:inherit;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);transition:all .15s;font-weight:600}
+  .evp-toggle:hover{filter:brightness(1.2)}
+  .evp-toggle.to-complete{background:rgba(64,168,96,.18);border-color:#40a860;color:#80d898}
+  .evp-toggle.to-normal{background:rgba(72,152,208,.15);border-color:#4898d0;color:#90c8f0}
+  .evp-row{display:flex;gap:8px}
+  .evp-edit{flex:1;padding:10px;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-family:inherit;cursor:pointer;background:var(--gold);border:1px solid var(--gold);color:#111315;transition:all .15s;font-weight:700}
+  .evp-edit:hover{background:var(--gold2);border-color:var(--gold2)}
+  .evp-del{flex:1;padding:10px;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-family:inherit;cursor:pointer;background:none;border:1px solid var(--border);color:var(--text3);transition:all .15s}
+  .evp-del:hover{border-color:#a04040;color:#e08080;background:#2a1818}
+
+  /* ══ 모바일 일정 수 뱃지 ══ */
+  .day-more{font-size:9px;color:var(--text3);text-align:center;margin-top:1px}
 
   /* ══ MODAL ══ */
   .modal-overlay {
@@ -263,6 +330,96 @@
   .modal-empty { padding:44px 24px; text-align:center; font-size:13px; color:var(--text3); letter-spacing:.5px; }
   .modal-ev-cnt { padding:14px 24px 10px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); border-bottom:1px solid var(--border); }
 
+  /* ══ 작품 정보 ══ */
+  .room-info-section { margin-bottom:20px; }
+  .room-info-card { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:14px 20px; display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start; }
+  .room-info-field { flex:1; min-width:130px; }
+  .room-info-lbl { font-size:10px; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:5px; }
+  .room-info-val { font-size:13px; color:var(--text1); cursor:pointer; padding:3px 6px 3px 0; border-bottom:1px solid transparent; transition:border-color .15s; display:flex; align-items:center; gap:6px; }
+  .room-info-val:hover { border-bottom-color:var(--border); }
+  .room-info-val .ri-icon { font-size:10px; color:var(--text3); opacity:0; transition:opacity .15s; }
+  .room-info-val:hover .ri-icon { opacity:1; }
+  .room-info-input { background:var(--bg); border:1px solid var(--gold); color:var(--text1); font-family:inherit; font-size:13px; padding:4px 8px; border-radius:3px; width:100%; box-sizing:border-box; }
+  .room-info-input:focus { outline:none; }
+  .room-info-empty { color:var(--text3); font-style:italic; }
+
+  /* ══ 서버 & 네트워크 ══ */
+  .server-section { margin-top:32px; }
+  .server-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:4px; }
+  @media(max-width:640px){ .server-grid{grid-template-columns:1fr} }
+  .server-card { background:var(--bg2); border:1px solid var(--border); padding:16px 18px; display:flex; flex-direction:column; gap:8px; position:relative; }
+  .server-card-hdr { display:flex; align-items:center; gap:10px; }
+  .server-status { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .srv-online  { background:#5ab85a; box-shadow:0 0 6px #5ab85a88; }
+  .srv-offline { background:#888; }
+  .srv-warning { background:#d09840; box-shadow:0 0 6px #d0984088; }
+  .server-name { font-size:14px; font-weight:600; color:var(--text); flex:1; }
+  .server-type-badge { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; padding:2px 8px; border:1px solid var(--border); color:var(--text3); }
+  .server-meta { display:flex; flex-direction:column; gap:4px; }
+  .server-meta-row { display:flex; gap:8px; font-size:12px; color:var(--text3); }
+  .server-meta-lbl { color:var(--text3); min-width:36px; }
+  .server-meta-val { color:var(--text2); font-family:monospace; }
+  .server-memo { font-size:12px; color:var(--text2); border-top:1px solid var(--border); padding-top:8px; line-height:1.5; }
+  .server-actions { position:absolute; top:12px; right:12px; display:flex; gap:4px; }
+  .srv-btn { width:24px; height:24px; background:none; border:1px solid var(--border); color:var(--text3); cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; transition:all .1s; }
+  .srv-btn.edit:hover { border-color:var(--gold); color:var(--gold); }
+  .srv-btn.del:hover  { border-color:#a04040; color:#e08080; background:#2a1818; }
+  .server-add-btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:14px; border:1px dashed var(--border); color:var(--text3); cursor:pointer; font-size:12px; letter-spacing:1px; transition:all .15s; background:none; width:100%; font-family:inherit; }
+  .server-add-btn:hover { border-color:var(--gold); color:var(--gold); background:rgba(212,196,156,.04); }
+  .srv-modal-body { padding:20px 24px; display:flex; flex-direction:column; gap:12px; max-height:70vh; overflow-y:auto; }
+  .srv-type-btns { display:flex; gap:8px; }
+  .srv-type-btn { flex:1; padding:10px; border:1px solid var(--border); background:none; color:var(--text2); font-family:inherit; font-size:12px; letter-spacing:1px; cursor:pointer; transition:all .15s; }
+  .srv-type-btn.active { border-color:var(--gold); color:var(--gold); background:rgba(212,196,156,.08); }
+  .srv-status-btns { display:flex; gap:8px; }
+  .srv-status-btn { flex:1; padding:8px; border:1px solid var(--border); background:none; color:var(--text3); font-family:inherit; font-size:11px; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .srv-status-btn.active.online  { border-color:#5ab85a; color:#5ab85a; background:rgba(90,184,90,.1); }
+  .srv-status-btn.active.warning { border-color:#d09840; color:#d09840; background:rgba(208,152,64,.1); }
+  .srv-status-btn.active.offline { border-color:#888; color:#aaa; background:rgba(136,136,136,.1); }
+  .srv-field-lbl { font-size:11px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+
+  /* ══ 알림 내역 ══ */
+  .notif-list { padding: 0 36px 48px; }
+  .notif-item { display:flex; gap:14px; align-items:flex-start; padding:16px 0; border-bottom:1px solid var(--border); }
+  .notif-item:last-child { border-bottom:none; }
+  .notif-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; margin-top:2px; }
+  .notif-icon.add  { background:rgba(90,184,90,.15); }
+  .notif-icon.edit { background:rgba(212,196,156,.12); }
+  .notif-icon.del  { background:rgba(220,80,80,.12); }
+  .notif-body { flex:1; min-width:0; }
+  .notif-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:3px; }
+  .notif-desc  { font-size:12px; color:var(--text3); }
+  .notif-time  { font-size:11px; color:var(--text3); margin-top:4px; letter-spacing:.3px; }
+  .notif-empty { padding:60px 36px; text-align:center; color:var(--text3); font-size:13px; letter-spacing:1px; }
+  .notif-badge { background:var(--gold); color:#111; font-size:10px; font-weight:700; border-radius:10px; padding:1px 6px; margin-left:6px; display:inline-block; vertical-align:middle; }
+  .notif-item.read { opacity:.45; }
+  .notif-del-btn { background:none; border:none; color:var(--text3); cursor:pointer; font-size:16px; padding:4px; flex-shrink:0; line-height:1; transition:color .1s; }
+  .notif-del-btn:hover { color:#e05050; }
+
+  /* ══ PWA 알림 배너 ══ */
+  .pwa-banner{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:14px;z-index:300;transform:translateY(100%);transition:transform .3s ease}
+  .pwa-banner.show{transform:none}
+  .pwa-banner-text{flex:1;font-size:13px;color:var(--text2);line-height:1.4}
+  .pwa-banner-text strong{color:var(--gold);display:block;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+  .pwa-btn{background:var(--gold);color:#111315;border:none;padding:9px 18px;font-size:12px;font-weight:700;letter-spacing:1px;font-family:inherit;cursor:pointer;white-space:nowrap}
+  .pwa-btn-dismiss{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:4px;line-height:1}
+
+  /* ══ 수정 버튼 ══ */
+  .edit-btn{width:26px;height:26px;background:none;border:1px solid var(--border);color:var(--text3);cursor:pointer;font-size:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .1s}
+  .edit-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--bg3)}
+  .edit-cancel{background:transparent;border:1px solid var(--border2);color:var(--text3);padding:9px 14px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap;display:none}
+  .edit-cancel:hover{border-color:var(--text2);color:var(--text)}
+  .add-lbl.editing{color:var(--gold)}
+
+  /* ══ 완료 일정 아카이브 ══ */
+  .archive-section{margin-top:32px;padding-bottom:20px}
+  .archive-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-top:2px}
+  .archive-item{background:var(--bg2);border:1px solid var(--border);border-left:3px solid #4a6a4a;padding:14px 16px;display:flex;flex-direction:column;gap:5px;transition:background .1s}
+  .archive-item:hover{background:var(--bg3)}
+  .archive-date{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
+  .archive-title{font-size:14px;font-weight:600;color:var(--text)}
+  .archive-desc{font-size:12px;color:var(--text2);line-height:1.5}
+  .archive-empty{padding:20px 0;font-size:13px;color:var(--text3);text-align:center;letter-spacing:.5px}
+
   /* 클릭 가능 stat */
   .home-stat-clickable { cursor:pointer; }
   .home-stat-clickable:hover { background:var(--bg3); }
@@ -275,13 +432,56 @@
   .home-nav   { max-width:680px; }
 
   @media(max-width:960px){.room-grid{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}}
-  @media(max-width:640px){.room-grid{grid-template-columns:1fr}.home-nav{grid-template-columns:1fr}.sched-layout{grid-template-columns:1fr}.home-bar,.home-footer{padding-left:24px;padding-right:24px}.home-hero{padding:40px 24px 30px}}
+  @media(max-width:640px){
+    .room-grid{grid-template-columns:1fr}
+    .home-nav{grid-template-columns:1fr}
+    .sched-layout{grid-template-columns:1fr}
+    .home-bar,.home-footer{padding-left:24px;padding-right:24px}
+    .home-hero{padding:40px 24px 30px}
+
+    /* ── 캘린더 모바일 ── */
+    #page-schedule .inner{padding:14px 10px 32px}
+    .cal-hdr{padding:10px 12px}
+    .cal-m{font-size:14px}
+    .cal-nav-btn{width:28px;height:28px;font-size:14px}
+    .cal-dow{padding:6px 0;font-size:9px;letter-spacing:0}
+    .cal-day{padding:5px 2px;min-height:50px}
+    .day-num{font-size:11px;width:20px;height:20px;margin-bottom:3px}
+    /* 일정: 텍스트 숨기고 색점으로 */
+    .day-events{flex-direction:row;flex-wrap:wrap;gap:2px;justify-content:center}
+    .day-event{font-size:0;padding:0;width:7px;height:7px;border-radius:50%;border-left:none;min-width:0}
+
+    /* ── 서브 페이지 공통 ── */
+    .sub-topbar{padding:0 14px;gap:8px;font-size:11px}
+    #page-rooms .inner{padding:14px 10px 32px}
+    #page-room-detail .inner{padding:14px 10px 32px}
+    .detail-header{flex-direction:column;gap:6px}
+    .mac-cell-id{width:100px;font-size:11px;padding:11px 12px}
+    .room-hdr{padding:13px 12px 11px}
+    .room-body{padding:10px 12px 12px}
+    .room-card-arrow{padding:9px 12px}
+
+    /* ── 이벤트 패널 ── */
+    .add-area{padding:12px}
+    .ev-hdr{padding:12px 14px}
+    .event-item{padding:11px 12px}
+  }
 </style>
 </head>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <body>
+
+<!-- ══ PWA 배너 ══ -->
+<div class="pwa-banner" id="pwa-banner">
+  <div class="pwa-banner-text">
+    <strong>알림 설정</strong>
+    일정 알림을 받으려면 알림을 허용해 주세요
+  </div>
+  <button class="pwa-btn" onclick="requestNotifPermission()">허용</button>
+  <button class="pwa-btn-dismiss" onclick="dismissBanner()">✕</button>
+</div>
 
 <!-- ══ HOME ══ -->
 <div class="page active" id="page-home">
@@ -315,12 +515,97 @@
           <div class="hn-title">일정 관리</div>
           <div class="hn-go">View Calendar →</div>
         </div>
+        <div class="hn-card" onclick="showPage('notifications')" style="grid-column:1/-1">
+          <div class="hn-tag">Notifications</div>
+          <div class="hn-title">알림 내역 <span id="notif-badge" class="notif-badge" style="display:none"></span></div>
+          <div class="hn-go">View History →</div>
+        </div>
       </div>
     </div>
   </div>
   <div class="home-footer">
     <p>BLAST Post Production · Equipment Dashboard</p>
     <p>2026</p>
+  </div>
+</div>
+
+<!-- ══ NOTIFICATIONS PAGE ══ -->
+<div class="page" id="page-notifications">
+  <div class="sub-topbar">
+    <button class="sub-home-btn" onclick="showPage('home')">← Home</button>
+    <span class="sub-div">/</span>
+    <span class="sub-title">알림 내역</span>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="sub-home-btn" style="font-size:11px" onclick="clearNotifBadge()">모두 읽음</button>
+      <button class="sub-home-btn" style="font-size:11px;color:#e05050" onclick="deleteAllNotifs()">모두 삭제</button>
+    </div>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <div class="notif-empty">알림 내역이 없습니다</div>
+  </div>
+</div>
+
+<!-- ══ 일정 추가/수정 모달 ══ -->
+<div class="modal-overlay" id="ev-modal" onclick="if(event.target===this)closeEvModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-bar"></div>
+      <div class="modal-title" id="ev-modal-title">일정 추가</div>
+      <button class="modal-close" onclick="closeEvModal()">✕</button>
+    </div>
+    <div class="ev-modal-body">
+      <input class="fi" id="em-date"  type="date" />
+      <input class="fi" id="em-title" type="text" placeholder="일정 제목 *" />
+      <input class="fi" id="em-desc"  type="text" placeholder="설명 (선택)" />
+      <div>
+        <div class="color-label" style="margin-bottom:8px">색상</div>
+        <div class="color-swatches" id="color-swatches">
+          <div class="color-swatch ev-blue  active" data-color="ev-blue"  onclick="selectSwatch(this)" title="일반"></div>
+          <div class="color-swatch ev-green"        data-color="ev-green" onclick="selectSwatch(this)" title="완료"></div>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:6px">
+          <span style="font-size:11px;color:var(--text3)">🔵 일반</span>
+          <span style="font-size:11px;color:var(--text3)">🟢 완료</span>
+        </div>
+      </div>
+    </div>
+    <div class="ev-modal-footer">
+      <button class="ev-modal-cancel" onclick="closeEvModal()">취소</button>
+      <button class="fadd" id="ev-modal-save-btn" onclick="saveEvModal()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 날짜 시트 ══ -->
+<div class="modal-overlay" id="day-sheet" onclick="if(event.target===this)closeDaySheet()">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-head">
+      <div class="modal-head-bar"></div>
+      <div class="modal-title" id="day-sheet-date-lbl"></div>
+      <button class="modal-close" onclick="closeDaySheet()">✕</button>
+    </div>
+    <div class="modal-body" id="day-sheet-body" style="max-height:55vh;overflow-y:auto"></div>
+    <div class="day-sheet-add">
+      <button class="fadd" style="width:100%;padding:12px" onclick="closeDaySheet();openEvModal(daySheetDate)">+ 이 날 일정 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 이벤트 팝오버 ══ -->
+<div id="ev-popover" class="ev-popover">
+  <div class="ev-popover-bar" id="evp-bar"></div>
+  <div class="ev-popover-body" style="position:relative">
+    <button class="ev-popover-close" onclick="closeEvPopover()">✕</button>
+    <div class="ev-popover-title" id="evp-title"></div>
+    <div class="ev-popover-meta"  id="evp-meta"></div>
+    <div class="ev-popover-desc"  id="evp-desc"></div>
+    <div class="ev-popover-actions">
+      <button class="evp-toggle" id="evp-toggle-btn"></button>
+      <div class="evp-row">
+        <button class="evp-edit" id="evp-edit-btn">✏ 수정</button>
+        <button class="evp-del"  id="evp-del-btn">🗑 삭제</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -356,37 +641,37 @@
     <div class="room-grid">
 
       <div class="room-card r801" onclick="openRoom('r801')">
-        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">1단지 801호</div><div class="room-manager">금초롱</div><div class="room-phone">010-7635-3101</div></div><div class="mac-cnt">Mac × 5</div></div>
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">1단지 801호</div><div class="room-project" id="proj-r801"></div><div class="room-manager">금초롱</div><div class="room-phone">010-7635-3101</div></div><div class="mac-cnt">Mac × 5</div></div>
         <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-08</div><div class="ms-chip"><div class="cdot"></div>BM-MS-09</div><div class="ms-chip"><div class="cdot"></div>BM-MS-10</div><div class="ms-chip"><div class="cdot"></div>BM-MS-11</div><div class="ms-chip"><div class="cdot"></div>BM-MS-23</div></div></div>
         <div class="room-card-arrow">상세보기 →</div>
       </div>
 
       <div class="room-card r1408" onclick="openRoom('r1408')">
-        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">1단지 1408호</div><div class="room-manager">안연정</div><div class="room-phone">010-3612-0758</div></div><div class="mac-cnt">Mac × 5</div></div>
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">1단지 1408호</div><div class="room-project" id="proj-r1408"></div><div class="room-manager">안연정</div><div class="room-phone">010-3612-0758</div></div><div class="mac-cnt">Mac × 5</div></div>
         <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-06</div><div class="ms-chip"><div class="cdot"></div>BM-MS-12</div><div class="ms-chip"><div class="cdot"></div>BM-MS-18</div><div class="ms-chip"><div class="cdot"></div>BM-MS-24</div><div class="ms-chip"><div class="cdot"></div>BM-MS-29</div></div></div>
         <div class="room-card-arrow">상세보기 →</div>
       </div>
 
       <div class="room-card rJTBC" onclick="openRoom('rJTBC')">
-        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">JTBC</div><div class="room-manager">허미정</div><div class="room-phone">010-3275-2289</div></div><div class="mac-cnt">Mac × 6</div></div>
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">JTBC</div><div class="room-project" id="proj-rJTBC"></div><div class="room-manager">허미정</div><div class="room-phone">010-3275-2289</div></div><div class="mac-cnt">Mac × 6</div></div>
         <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-03</div><div class="ms-chip"><div class="cdot"></div>BM-MS-05</div><div class="ms-chip"><div class="cdot"></div>BM-MS-15</div><div class="ms-chip"><div class="cdot"></div>BM-MS-16</div><div class="ms-chip"><div class="cdot"></div>BM-MS-19</div><div class="ms-chip"><div class="cdot"></div>BM-MS-26</div></div></div>
         <div class="room-card-arrow">상세보기 →</div>
       </div>
 
       <div class="room-card r1903" onclick="openRoom('r1903')">
-        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">2단지 1903호</div><div class="room-manager">강세나</div><div class="room-phone">010-5174-7311</div></div><div class="mac-cnt">Mac × 5</div></div>
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">2단지 1903호</div><div class="room-project" id="proj-r1903"></div><div class="room-manager">강세나</div><div class="room-phone">010-5174-7311</div></div><div class="mac-cnt">Mac × 5</div></div>
         <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-01</div><div class="ms-chip"><div class="cdot"></div>BM-MS-02</div><div class="ms-chip"><div class="cdot"></div>BM-MS-13</div><div class="ms-chip"><div class="cdot"></div>BM-MS-14</div><div class="ms-chip"><div class="cdot"></div>BM-MS-17</div></div></div>
         <div class="room-card-arrow">상세보기 →</div>
       </div>
 
       <div class="room-card r1201a" onclick="openRoom('r1201a')">
-        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">1단지 1201호</div><div class="room-manager">배지윤 / 여태현</div><div class="room-phone">010-7473-1998 / 010-8904-2897</div></div><div class="mac-cnt">Mac × 6</div></div>
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">1단지 1201호</div><div class="room-project" id="proj-r1201a"></div><div class="room-manager">배지윤 / 여태현</div><div class="room-phone">010-7473-1998 / 010-8904-2897</div></div><div class="mac-cnt">Mac × 6</div></div>
         <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-20</div><div class="ms-chip"><div class="cdot"></div>BM-MS-21</div><div class="ms-chip"><div class="cdot"></div>BM-MS-25</div><div class="ms-chip"><div class="cdot"></div>BM-MS-27</div><div class="ms-chip"><div class="cdot"></div>BM-MS-28</div><div class="ms-chip sp"><div class="cdot" style="background:var(--gold)"></div>blast_30</div></div></div>
         <div class="room-card-arrow">상세보기 →</div>
       </div>
 
       <div class="room-card r1201b" onclick="openRoom('r1201b')">
-        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">2단지 1201호</div><div class="room-manager">임학원</div><div class="room-phone">010-8773-4231</div></div><div class="mac-cnt">Mac × 2</div></div>
+        <div class="room-hdr"><div class="r-accent"></div><div class="room-info"><div class="room-name">2단지 1201호</div><div class="room-project" id="proj-r1201b"></div><div class="room-manager">임학원</div><div class="room-phone">010-8773-4231</div></div><div class="mac-cnt">Mac × 2</div></div>
         <div class="room-body"><div class="ms-label">Mac Studio</div><div class="ms-chips"><div class="ms-chip"><div class="cdot"></div>BM-MS-07</div><div class="ms-chip"><div class="cdot"></div>BM-MS-22</div></div></div>
         <div class="room-card-arrow">상세보기 →</div>
       </div>
@@ -411,6 +696,30 @@
         <div class="detail-room-name" id="detail-room-name"></div>
         <div class="detail-manager"   id="detail-manager"></div>
         <div class="detail-phone"     id="detail-phone"></div>
+      </div>
+    </div>
+
+    <!-- 작품 정보 -->
+    <div class="room-info-section">
+      <div class="room-info-card">
+        <div class="room-info-field">
+          <div class="room-info-lbl">작품명</div>
+          <div id="ri-project" class="room-info-val" onclick="editRoomInfo('project',this)" title="클릭하여 수정">
+            <span class="room-info-empty">미입력</span><span class="ri-icon">✏</span>
+          </div>
+        </div>
+        <div class="room-info-field">
+          <div class="room-info-lbl">입실 날짜</div>
+          <div id="ri-checkin" class="room-info-val" onclick="editRoomInfo('checkIn',this)" title="클릭하여 수정">
+            <span class="room-info-empty">미입력</span><span class="ri-icon">✏</span>
+          </div>
+        </div>
+        <div class="room-info-field">
+          <div class="room-info-lbl">퇴실 날짜</div>
+          <div id="ri-checkout" class="room-info-val" onclick="editRoomInfo('checkOut',this)" title="클릭하여 수정">
+            <span class="room-info-empty">미입력</span><span class="ri-icon">✏</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -451,6 +760,76 @@
         </div>
       </div>
     </div>
+
+    <!-- 서버 & 네트워크 -->
+    <div class="server-section">
+      <div class="section-head" style="margin-bottom:16px">
+        <div class="sec-title">서버 &amp; 네트워크</div><div class="sec-line"></div>
+        <div class="sec-tag" id="server-cnt-badge">0대</div>
+      </div>
+      <div class="server-grid" id="server-grid"></div>
+      <div style="margin-top:10px">
+        <button class="server-add-btn" onclick="openServerModal()">+ 장비 추가</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 서버 추가/수정 모달 ══ -->
+<div class="modal-overlay" id="srv-modal" onclick="if(event.target===this)closeSrvModal()">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-head">
+      <div class="modal-head-bar"></div>
+      <div class="modal-title" id="srv-modal-title">장비 추가</div>
+      <button class="modal-close" onclick="closeSrvModal()">✕</button>
+    </div>
+    <div class="srv-modal-body">
+      <div>
+        <div class="srv-field-lbl">유형</div>
+        <div class="srv-type-btns">
+          <button class="srv-type-btn active" id="stype-nas"     onclick="setSrvType('nas')">💾 NAS / 스토리지</button>
+          <button class="srv-type-btn"        id="stype-network" onclick="setSrvType('network')">🌐 네트워크 장비</button>
+        </div>
+      </div>
+      <div>
+        <div class="srv-field-lbl">상태</div>
+        <div class="srv-status-btns">
+          <button class="srv-status-btn active online"  id="sstatus-online"  onclick="setSrvStatus('online')"><span style="width:8px;height:8px;border-radius:50%;background:#5ab85a;display:inline-block"></span>온라인</button>
+          <button class="srv-status-btn warning"         id="sstatus-warning" onclick="setSrvStatus('warning')"><span style="width:8px;height:8px;border-radius:50%;background:#d09840;display:inline-block"></span>경고</button>
+          <button class="srv-status-btn offline"         id="sstatus-offline" onclick="setSrvStatus('offline')"><span style="width:8px;height:8px;border-radius:50%;background:#888;display:inline-block"></span>오프라인</button>
+        </div>
+      </div>
+      <div>
+        <div class="srv-field-lbl">이름</div>
+        <input class="fi" id="srv-name" type="text" placeholder="예: BLAST-NAS-01, 메인 스위치" />
+      </div>
+      <div>
+        <div class="srv-field-lbl">IP 주소</div>
+        <input class="fi" id="srv-ip" type="text" placeholder="예: 192.168.1.100" />
+      </div>
+      <div id="srv-nas-fields">
+        <div class="srv-field-lbl">자산 코드</div>
+        <input class="fi" id="srv-asset-code" type="text" placeholder="예: BM-SRV-08" />
+        <div class="srv-field-lbl" style="margin-top:10px">시리얼 번호</div>
+        <input class="fi" id="srv-serial" type="text" placeholder="예: P000400012507109001" />
+        <div class="srv-field-lbl" style="margin-top:10px">용량</div>
+        <input class="fi" id="srv-capacity" type="text" placeholder="예: 48TB" />
+        <div class="srv-field-lbl" style="margin-top:10px">마운트 경로</div>
+        <input class="fi" id="srv-mount" type="text" placeholder="예: /Volumes/BLAST_NAS" />
+      </div>
+      <div id="srv-net-fields" style="display:none">
+        <div class="srv-field-lbl">역할 / 모델</div>
+        <input class="fi" id="srv-role" type="text" placeholder="예: 메인 스위치 24포트, 공유기" />
+      </div>
+      <div>
+        <div class="srv-field-lbl">메모</div>
+        <textarea class="fi" id="srv-memo" rows="2" placeholder="비고 사항" style="resize:vertical;font-family:inherit"></textarea>
+      </div>
+    </div>
+    <div class="ev-modal-footer">
+      <button class="ev-modal-cancel" onclick="closeSrvModal()">취소</button>
+      <button class="fadd" onclick="saveSrvModal()">저장</button>
+    </div>
   </div>
 </div>
 
@@ -470,6 +849,7 @@
           <span style="color:var(--border2);margin:0 5px;">/</span>
           <span class="cal-y" id="cal-y"></span>
           <div class="cal-nav">
+            <button class="cal-today-btn" onclick="goToday()">오늘</button>
             <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
             <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
           </div>
@@ -482,8 +862,8 @@
       <div class="events-panel">
         <div class="ev-hdr"><h3>Schedule</h3><p id="ev-month-lbl"></p></div>
         <div id="events-list"></div>
-        <div class="add-area">
-          <div class="add-lbl">Add Event</div>
+        <div class="add-area" id="add-area">
+          <div class="add-lbl" id="add-lbl-text">Add Event</div>
           <div class="form-col">
             <input class="fi" id="new-date"  type="date" />
             <input class="fi" id="new-title" type="text" placeholder="일정 제목" />
@@ -496,11 +876,22 @@
                 <option value="ev-red">만료 / 긴급</option>
                 <option value="ev-purple">점검</option>
               </select>
-              <button class="fadd" onclick="addEvent()">추가</button>
+              <button class="edit-cancel" id="cancel-edit-btn" onclick="cancelEdit()">취소</button>
+              <button class="fadd" id="fadd-btn" onclick="addEvent()">추가</button>
             </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 완료 일정 아카이브 -->
+    <div class="archive-section" id="archive-section">
+      <div class="section-head">
+        <div class="sec-title">완료된 일정</div>
+        <div class="sec-line"></div>
+        <div class="sec-tag" id="archive-cnt-tag">0건</div>
+      </div>
+      <div id="archive-list"><div class="archive-empty">완료된 일정 없음</div></div>
     </div>
   </div>
 </div>
@@ -514,14 +905,32 @@ document.getElementById('home-date').textContent =
   NOW.getFullYear()+' . '+String(NOW.getMonth()+1).padStart(2,'0')+' . '+
   String(NOW.getDate()).padStart(2,'0')+'  ('+DAYS_KO[NOW.getDay()]+')';
 
-/* ── 네비게이션 ── */
-function showPage(id) {
+/* ── 네비게이션 + 뒤로가기 ── */
+const navHistory = [];
+history.replaceState({page:'home'}, '', '');
+
+function showPage(id, addToHistory = true) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   if (id==='home')     updateHomeCount();
-  if (id==='schedule') renderCalendar();
+  if (id==='rooms')    loadRoomsInfo();
+  if (id==='schedule') { renderCalendar(); renderCompletedEvents(); }
   window.scrollTo(0,0);
+  if (addToHistory) {
+    navHistory.push({page:id, roomKey:currentRoom});
+    history.pushState({page:id, roomKey:currentRoom}, '', '');
+  }
 }
+
+window.addEventListener('popstate', () => {
+  navHistory.pop();
+  const prev = navHistory[navHistory.length - 1];
+  if (prev && prev.page === 'room-detail' && prev.roomKey) {
+    openRoom(prev.roomKey, false);
+  } else {
+    showPage(prev ? prev.page : 'home', false);
+  }
+});
 
 /* ══════════════════════════════
    호실 데이터
@@ -604,7 +1013,7 @@ const db = firebase.firestore();
 let currentRoom = null;
 let issueUnsub  = null;
 
-function openRoom(roomKey) {
+function openRoom(roomKey, addToHistory = true) {
   currentRoom = roomKey;
   const r = ROOMS[roomKey];
 
@@ -638,7 +1047,14 @@ function openRoom(roomKey) {
       renderIssues(issues);
     }, err => console.error('Issues error:', err));
 
-  showPage('room-detail');
+  /* 작품 정보 리스너 */
+  loadRoomInfo(roomKey);
+
+  /* 서버 & 네트워크 장비 (시딩 후 리스너) */
+  seedServersOnce(roomKey);
+  loadServers(roomKey);
+
+  showPage('room-detail', addToHistory);
 }
 
 function renderIssues(issues) {
@@ -679,6 +1095,7 @@ function deleteIssue(id) {
    일정 (Firestore)
 ══════════════════════════════ */
 let calEvents = [];
+let editingEventId = null;
 const barColor = {'ev-red':'#8a4a4a','ev-blue':'#4a6a8a','ev-green':'#4a6a4a','ev-yellow':'#8a7040','ev-purple':'#6a4a8a'};
 const SEED_EVENTS = [
   {date:'2026-03-09',title:'블 구독 갱신',   desc:'블루 계정 (15개) Adobe 갱신 완료',color:'ev-green'},
@@ -700,6 +1117,8 @@ db.collection('events').onSnapshot(snap => {
   calEvents.sort((a,b)=>a.date.localeCompare(b.date));
   renderCalendar();
   updateHomeCount();
+  renderCompletedEvents();
+  if (Notification.permission === 'granted') checkTodayAndNotify();
 }, err => console.error('Events error:', err));
 
 function updateHomeCount() {
@@ -708,27 +1127,38 @@ function updateHomeCount() {
   if (el) el.textContent = calEvents.filter(e=>e.date.startsWith(p)).length;
 }
 function deleteEvent(id) { db.collection('events').doc(id).delete(); }
-function addEvent() {
-  const date=document.getElementById('new-date').value;
-  const title=document.getElementById('new-title').value.trim();
-  const desc=document.getElementById('new-desc').value.trim();
-  const color=document.getElementById('new-color').value;
-  if(!date||!title){alert('날짜와 제목을 입력해주세요.');return;}
-  db.collection('events').add({date,title,desc,color});
-  document.getElementById('new-date').value='';
-  document.getElementById('new-title').value='';
-  document.getElementById('new-desc').value='';
-  const [y,m]=date.split('-').map(Number); curY=y; curM=m-1;
+
+function editEvent(id) {
+  const ev = calEvents.find(e => e.id === id);
+  if (!ev) return;
+  openEvModal(ev.date, ev);
 }
+
+function cancelEdit() {
+  editingEventId = null;
+  document.getElementById('new-date').value  = '';
+  document.getElementById('new-title').value = '';
+  document.getElementById('new-desc').value  = '';
+  document.getElementById('new-color').value = 'ev-blue';
+  const lbl = document.getElementById('add-lbl-text');
+  lbl.textContent = 'Add Event';
+  lbl.classList.remove('editing');
+  document.getElementById('fadd-btn').textContent = '추가';
+  document.getElementById('cancel-edit-btn').style.display = 'none';
+}
+
+function addEvent() { openEvModal(); }  // 하단 폼 추가 버튼 → 모달로
 
 let curY=2026, curM=4;
 function changeMonth(d){curM+=d;if(curM<0){curM=11;curY--;}if(curM>11){curM=0;curY++;}renderCalendar();}
+function goToday(){const n=new Date();curY=n.getFullYear();curM=n.getMonth();renderCalendar();}
+
+// ── 날짜 클릭: 일정 있으면 시트, 없으면 추가 모달
 function onDayClick(ds){
-  const inp=document.getElementById('new-date');
-  inp.value=ds; inp.classList.add('highlight');
-  setTimeout(()=>inp.classList.remove('highlight'),700);
-  document.getElementById('new-title').focus();
-  renderCalendar();
+  closeEvPopover();
+  const evs = calEvents.filter(e=>e.date===ds);
+  if(evs.length>0){ openDaySheet(ds,evs); }
+  else { openEvModal(ds); }
 }
 function renderCalendar(){
   const el=id=>document.getElementById(id);
@@ -752,7 +1182,12 @@ function renderCalendar(){
     const isSel=(ds===selDate);
     const c=document.createElement('div');
     c.className='cal-day'+(isToday?' today':'')+(isSel?' selected':'');
-    const evHtml=calEvents.filter(e=>e.date===ds).map(e=>`<div class="day-event ${e.color}">${e.title}</div>`).join('');
+    const dayEvs=calEvents.filter(e=>e.date===ds);
+    const MAX_SHOW=3;
+    const shown=dayEvs.slice(0,MAX_SHOW);
+    const more=dayEvs.length-MAX_SHOW;
+    const evHtml=shown.map(e=>`<div class="day-event ${e.color}" onclick="event.stopPropagation();openEvPopover(event,'${e.id}')" title="${e.title}">${e.title}</div>`).join('')
+      +(more>0?`<div class="day-more">+${more}개</div>`:'');
     c.innerHTML=`<div class="day-num">${d}</div><div class="day-events">${evHtml}</div>`;
     c.addEventListener('click',()=>onDayClick(ds));
     grid.appendChild(c);
@@ -770,8 +1205,22 @@ function renderEventsList(){
     const d=new Date(e.date+'T00:00:00');
     const day=parseInt(e.date.split('-')[2]);
     const dow=DAYS_KO[d.getDay()];
-    return `<div class="event-item"><div class="ev-bar" style="background:${barColor[e.color]||'#4a4c52'}"></div><div class="ev-info"><div class="ev-date">${curM+1}. ${day} (${dow})</div><div class="ev-title">${e.title}</div>${e.desc?`<div class="ev-desc">${e.desc}</div>`:''}</div><button class="del-btn" onclick="deleteEvent('${e.id}')">✕</button></div>`;
+    return `<div class="event-item"><div class="ev-bar" style="background:${barColor[e.color]||'#4a4c52'}"></div><div class="ev-info"><div class="ev-date">${curM+1}. ${day} (${dow})</div><div class="ev-title">${e.title}</div>${e.desc?`<div class="ev-desc">${e.desc}</div>`:''}</div><button class="edit-btn" onclick="editEvent('${e.id}')" title="수정">✎</button><button class="del-btn" onclick="deleteEvent('${e.id}')">✕</button></div>`;
   }).join('');
+}
+
+function renderCompletedEvents(){
+  const list=document.getElementById('archive-list'); if(!list)return;
+  const done=calEvents.filter(e=>e.color==='ev-green').sort((a,b)=>b.date.localeCompare(a.date));
+  const tag=document.getElementById('archive-cnt-tag');
+  if(tag)tag.textContent=done.length+'건';
+  if(!done.length){list.innerHTML='<div class="archive-empty">완료된 일정 없음</div>';return;}
+  list.innerHTML='<div class="archive-grid">'+done.map(e=>{
+    const d=new Date(e.date+'T00:00:00');
+    const [y,mo,day]=e.date.split('-');
+    const dow=DAYS_KO[d.getDay()];
+    return `<div class="archive-item"><div class="archive-date">${y}. ${parseInt(mo)}. ${parseInt(day)} (${dow})</div><div class="archive-title">${e.title}</div>${e.desc?`<div class="archive-desc">${e.desc}</div>`:''}</div>`;
+  }).join('')+'</div>';
 }
 
 /* ── 이달 일정 모달 ── */
@@ -809,7 +1258,555 @@ function closeModal() {
 /* ESC 키로 닫기 */
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 
+/* ══════════════════════════════
+   OneSignal 푸시 알림
+══════════════════════════════ */
+const OS_APP_ID  = '9bde8ba8-05c9-412c-bda9-c8b0312e4154';
+const OS_API_KEY = 'os_v2_app_tppixkafzfaszpnjzcydclsbktt6xycrsviugeuoqgibosyfozkxd7h2iazcpztxf7xvw6gvwgpq7myxmouyclqmtzm25lciyyapopi';
+
+// OneSignal 초기화
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  await OneSignal.init({
+    appId: OS_APP_ID,
+    serviceWorkerPath: 'OneSignalSDKWorker.js',
+    promptOptions: {
+      slidedown: {
+        enabled: true,
+        autoPrompt: true,
+        timeDelay: 5,
+        pageViews: 1,
+        text: {
+          actionMessage: 'BLAST 일정 알림을 받으시겠습니까?',
+          acceptButton: '허용',
+          cancelButton: '나중에'
+        }
+      }
+    }
+  });
+});
+
+// 앱 내 토스트
+function showToast(msg) {
+  let t = document.getElementById('blast-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'blast-toast';
+    t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1c2024;border:1px solid #d4c49c;color:#f0ece4;padding:12px 20px;font-size:13px;z-index:400;border-radius:2px;box-shadow:0 8px 24px rgba(0,0,0,.6);max-width:90vw;text-align:center;opacity:0;transition:opacity .3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 4000);
+}
+
+// 모든 구독자에게 OneSignal REST API로 푸시 전송 + Firestore에 기록
+async function sendPushToAll(title, body, type='add') {
+  // Firestore에 알림 기록 저장
+  db.collection('notifications').add({
+    title, body, type,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  // OneSignal 푸시 전송
+  try {
+    const resp = await fetch('https://api.onesignal.com/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Key ' + OS_API_KEY
+      },
+      body: JSON.stringify({
+        app_id: OS_APP_ID,
+        included_segments: ['All'],
+        headings: { en: title, ko: title },
+        contents: { en: body, ko: body },
+        url: window.location.origin
+      })
+    });
+    const data = await resp.json();
+    console.log('OneSignal 전송 완료:', data);
+  } catch(e) {
+    console.error('OneSignal 오류:', e);
+  }
+}
+
+// 새 일정 추가 알림
+function notifyNewEvent(title, date) {
+  const [y,m,d] = date.split('-');
+  const bodyText = parseInt(m)+'월 '+parseInt(d)+'일  '+title;
+  sendPushToAll('📅 일정 추가됨', bodyText, 'add');
+  showToast('📅 ' + bodyText);
+}
+
+// 알림 내역 — 읽음/숨김은 개인 localStorage에 저장 (Firestore 공유 데이터 훼손 없음)
+let unreadNotifCount = 0;
+let lastReadNotifTime = parseInt(localStorage.getItem('notif_last_read') || '0');
+let hiddenNotifIds = JSON.parse(localStorage.getItem('notif_hidden_ids') || '[]');
+
+db.collection('notifications').orderBy('createdAt','desc').limit(100)
+  .onSnapshot(snap => {
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+
+    // 숨긴 항목 제외
+    const visible = [];
+    snap.forEach(doc => {
+      if (!hiddenNotifIds.includes(doc.id)) visible.push({ id: doc.id, ...doc.data() });
+    });
+
+    if (visible.length === 0) {
+      list.innerHTML = '<div class="notif-empty">알림 내역이 없습니다</div>';
+      updateNotifBadge(0); return;
+    }
+
+    let newCount = 0;
+    let html = '';
+    visible.forEach(d => {
+      const ts = d.createdAt ? d.createdAt.toMillis() : 0;
+      const isNew = ts > lastReadNotifTime;
+      if (isNew) newCount++;
+      const icon = d.type === 'edit' ? '✏️' : '📅';
+      const iconClass = d.type === 'edit' ? 'edit' : 'add';
+      const timeStr = ts ? new Date(ts).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      html += `<div class="notif-item${isNew ? '' : ' read'}" data-id="${d.id}" onclick="notifItemClick(event,'${d.id}')">
+        <div class="notif-icon ${iconClass}">${icon}</div>
+        <div class="notif-body">
+          <div class="notif-title">${d.title}</div>
+          <div class="notif-desc">${d.body}</div>
+          <div class="notif-time">${timeStr}</div>
+        </div>
+        <button class="notif-del-btn" onclick="hideNotif(event,'${d.id}')" title="삭제">✕</button>
+      </div>`;
+    });
+    list.innerHTML = html;
+    updateNotifBadge(newCount);
+  });
+
+function updateNotifBadge(count) {
+  unreadNotifCount = count;
+  const badge = document.getElementById('notif-badge');
+  if (!badge) return;
+  if (count > 0) { badge.textContent = count; badge.style.display = 'inline-block'; }
+  else { badge.style.display = 'none'; }
+}
+
+// 알림 클릭 → 캘린더로 이동
+function notifItemClick(e, id) {
+  if (e.target.closest('.notif-del-btn')) return;
+  showPage('schedule');
+}
+
+// 개별 숨기기 (나한테만, Firestore 건드리지 않음)
+function hideNotif(e, id) {
+  e.stopPropagation();
+  if (!hiddenNotifIds.includes(id)) {
+    hiddenNotifIds.push(id);
+    localStorage.setItem('notif_hidden_ids', JSON.stringify(hiddenNotifIds));
+  }
+  const el = document.querySelector(`[data-id="${id}"]`);
+  if (el) el.remove();
+  const list = document.getElementById('notif-list');
+  if (list && list.querySelectorAll('.notif-item').length === 0) {
+    list.innerHTML = '<div class="notif-empty">알림 내역이 없습니다</div>';
+    updateNotifBadge(0);
+  }
+}
+
+// 모두 읽음
+function clearNotifBadge() {
+  lastReadNotifTime = Date.now();
+  localStorage.setItem('notif_last_read', lastReadNotifTime);
+  document.querySelectorAll('.notif-item').forEach(el => el.classList.add('read'));
+  updateNotifBadge(0);
+  showToast('✓ 모두 읽음 처리됐습니다');
+}
+
+// 모두 삭제 (나한테만)
+function deleteAllNotifs() {
+  document.querySelectorAll('.notif-item[data-id]').forEach(el => {
+    const id = el.getAttribute('data-id');
+    if (!hiddenNotifIds.includes(id)) hiddenNotifIds.push(id);
+  });
+  localStorage.setItem('notif_hidden_ids', JSON.stringify(hiddenNotifIds));
+  const list = document.getElementById('notif-list');
+  if (list) list.innerHTML = '<div class="notif-empty">알림 내역이 없습니다</div>';
+  updateNotifBadge(0);
+  showToast('🗑️ 알림 내역을 모두 삭제했습니다');
+}
+
+/* ══════════════════════════════
+   캘린더 모달 / 팝오버 / 시트
+══════════════════════════════ */
+
+// ── 색상 스와치 선택
+function selectSwatch(el) {
+  document.querySelectorAll('#color-swatches .color-swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+}
+function getSelectedColor() {
+  const a = document.querySelector('#color-swatches .color-swatch.active');
+  return a ? a.dataset.color : 'ev-blue';
+}
+function setSelectedColor(color) {
+  document.querySelectorAll('#color-swatches .color-swatch').forEach(s=>{
+    s.classList.toggle('active', s.dataset.color===color);
+  });
+}
+
+// ── 일정 추가/수정 모달
+function openEvModal(date='', ev=null) {
+  closeDaySheet();
+  editingEventId = ev ? ev.id : null;
+  document.getElementById('em-date').value  = date || '';
+  document.getElementById('em-title').value = ev ? ev.title : '';
+  document.getElementById('em-desc').value  = ev ? (ev.desc||'') : '';
+  setSelectedColor(ev ? ev.color : 'ev-blue');
+  document.getElementById('ev-modal-title').textContent = ev ? '일정 수정' : '일정 추가';
+  document.getElementById('ev-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('em-title').focus(), 100);
+}
+function closeEvModal() {
+  document.getElementById('ev-modal').classList.remove('open');
+  editingEventId = null;
+}
+function saveEvModal() {
+  const date  = document.getElementById('em-date').value;
+  const title = document.getElementById('em-title').value.trim();
+  const desc  = document.getElementById('em-desc').value.trim();
+  const color = getSelectedColor();
+  if(!date||!title){alert('날짜와 제목을 입력해주세요.');return;}
+  if(editingEventId) {
+    db.collection('events').doc(editingEventId).update({date,title,desc,color});
+    const [y2,m2,d2]=date.split('-');
+    sendPushToAll('✏️ 일정 수정됨', parseInt(m2)+'월 '+parseInt(d2)+'일  '+title, 'edit');
+    showToast('✏️ '+parseInt(m2)+'월 '+parseInt(d2)+'일  '+title);
+  } else {
+    db.collection('events').add({date,title,desc,color});
+    notifyNewEvent(title,date);
+    const [y,m]=date.split('-').map(Number); curY=y; curM=m-1;
+  }
+  closeEvModal();
+}
+
+// ── 이벤트 팝오버
+let popoverId = null;
+function openEvPopover(e, id) {
+  e.stopPropagation();
+  const ev = calEvents.find(x=>x.id===id);
+  if(!ev) return;
+  popoverId = id;
+  const colorMap = {'ev-red':'#d06060','ev-blue':'#4898d0','ev-green':'#40a860','ev-yellow':'#c09030','ev-purple':'#9860d8'};
+  const [y,m,d] = ev.date.split('-');
+  document.getElementById('evp-bar').style.background = colorMap[ev.color]||'#4898d0';
+  document.getElementById('evp-title').textContent = ev.title;
+  document.getElementById('evp-meta').textContent  = y+'년 '+parseInt(m)+'월 '+parseInt(d)+'일';
+  document.getElementById('evp-desc').textContent  = ev.desc||'';
+  // 토글 버튼 (일반 ↔ 완료)
+  const toggleBtn = document.getElementById('evp-toggle-btn');
+  const isDone = ev.color === 'ev-green';
+  toggleBtn.textContent = isDone ? '↩ 일반으로 변경' : '✓ 완료 처리';
+  toggleBtn.className   = 'evp-toggle ' + (isDone ? 'to-normal' : 'to-complete');
+  toggleBtn.onclick = () => {
+    const newColor = isDone ? 'ev-blue' : 'ev-green';
+    db.collection('events').doc(id).update({color: newColor});
+    closeEvPopover();
+  };
+  document.getElementById('evp-edit-btn').onclick = ()=>{ closeEvPopover(); openEvModal(ev.date, ev); };
+  document.getElementById('evp-del-btn').onclick  = ()=>{ if(confirm('삭제할까요?')){ deleteEvent(id); closeEvPopover(); }};
+  // 위치 계산
+  const pop = document.getElementById('ev-popover');
+  pop.style.display='block';
+  const rect = e.target.getBoundingClientRect();
+  const pw=270, ph=180;
+  let left = rect.right+8;
+  let top  = rect.top;
+  if(left+pw > window.innerWidth-12)  left = rect.left-pw-8;
+  if(top+ph  > window.innerHeight-12) top  = window.innerHeight-ph-12;
+  if(left<8) left=8;
+  pop.style.left = left+'px';
+  pop.style.top  = top+'px';
+  pop.classList.add('open');
+}
+function closeEvPopover() {
+  document.getElementById('ev-popover').classList.remove('open');
+  popoverId = null;
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#ev-popover')&&!e.target.closest('.day-event')) closeEvPopover();
+});
+
+// ── 날짜 시트
+let daySheetDate = '';
+function openDaySheet(ds, evs) {
+  daySheetDate = ds;
+  const [y,m,d] = ds.split('-');
+  document.getElementById('day-sheet-date-lbl').textContent = y+'년 '+parseInt(m)+'월 '+parseInt(d)+'일';
+  const colorMap={'ev-red':'#d06060','ev-blue':'#4898d0','ev-green':'#40a860','ev-yellow':'#c09030','ev-purple':'#9860d8'};
+  const html = evs.map(ev=>`
+    <div class="day-sheet-item">
+      <div class="day-sheet-bar" style="background:${colorMap[ev.color]||'#4898d0'}"></div>
+      <div class="day-sheet-info">
+        <div class="day-sheet-title">${ev.title}</div>
+        ${ev.desc?`<div class="day-sheet-desc">${ev.desc}</div>`:''}
+      </div>
+      <div class="day-sheet-acts">
+        <button class="ds-btn edit" onclick="closeDaySheet();openEvModal('${ev.date}',calEvents.find(e=>e.id==='${ev.id}'))" title="수정">✏</button>
+        <button class="ds-btn del"  onclick="if(confirm('삭제?')){deleteEvent('${ev.id}');closeDaySheet();}" title="삭제">🗑</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('day-sheet-body').innerHTML = html || '<div class="day-sheet-empty">일정 없음</div>';
+  document.getElementById('day-sheet').classList.add('open');
+}
+function closeDaySheet() {
+  document.getElementById('day-sheet').classList.remove('open');
+}
+
+/* ══════════════════════════════
+   서버 & 네트워크
+══════════════════════════════ */
+let serverUnsub  = null;
+let roomInfoUnsub = null;
+
+/* ── 엑셀 기반 초기 서버 데이터 ── */
+const SEED_SERVERS = {
+  r801: [
+    { type:'nas',     status:'online', name:'Accusys 스토리지', assetCode:'BM-SRV-08', serial:'P000400012507109001', ip:'', capacity:'', mount:'', role:'', memo:'A12S3-PS' },
+    { type:'network', status:'online', name:'QNAP 스위치',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'네트워크 스위치', memo:'' },
+    { type:'network', status:'online', name:'ATTO 어댑터',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'Thunderbolt 어댑터 (ATTO Thunderlink)', memo:'' },
+    { type:'nas',     status:'online', name:'타워 맥프로',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'', memo:'Mac Pro Tower' },
+  ],
+  r1408: [
+    { type:'nas',     status:'online', name:'Accusys 스토리지', assetCode:'BM-SRV-09', serial:'P000900012507119001', ip:'', capacity:'', mount:'', role:'', memo:'A12S3-PS' },
+    { type:'network', status:'online', name:'QNAP 스위치',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'네트워크 스위치', memo:'' },
+    { type:'network', status:'online', name:'ATTO 어댑터',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'Thunderbolt 어댑터 (ATTO Thunderlink)', memo:'' },
+    { type:'nas',     status:'online', name:'타워 맥프로',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'', memo:'Mac Pro Tower' },
+  ],
+  rJTBC: [
+    { type:'nas',     status:'online', name:'Accusys 스토리지', assetCode:'BM-SRV-10', serial:'',                   ip:'', capacity:'', mount:'', role:'', memo:'A12S3-PS' },
+    { type:'network', status:'online', name:'ATTO 어댑터',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'Thunderbolt 어댑터 (ATTO Thunderlink)', memo:'' },
+    { type:'nas',     status:'online', name:'맥프로',          assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'', memo:'Mac Pro' },
+  ],
+  r1903: [
+    { type:'nas',     status:'online', name:'Accusys 스토리지', assetCode:'BM-SRV-11', serial:'P00040001250771',    ip:'', capacity:'', mount:'', role:'', memo:'GAMMA12' },
+    { type:'network', status:'online', name:'QNAP 스위치',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'네트워크 스위치', memo:'' },
+    { type:'network', status:'online', name:'ATTO 어댑터',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'Thunderbolt 어댑터 (ATTO Thunderlink)', memo:'' },
+    { type:'nas',     status:'online', name:'맥프로',          assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'', memo:'Mac Pro' },
+  ],
+  r1201a: [
+    { type:'nas',     status:'online', name:'Accusys 스토리지', assetCode:'BM-SRV-12', serial:'P000200012507119001', ip:'', capacity:'', mount:'', role:'', memo:'A12S3-PS' },
+    { type:'network', status:'online', name:'QNAP 스위치',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'네트워크 스위치', memo:'' },
+    { type:'network', status:'online', name:'ATTO 어댑터',     assetCode:'',           serial:'',                   ip:'', capacity:'', mount:'', role:'Thunderbolt 어댑터 (ATTO Thunderlink)', memo:'' },
+    { type:'nas',     status:'online', name:'기타 컴퓨터',     assetCode:'',           serial:'blast_59',           ip:'', capacity:'', mount:'', role:'', memo:'' },
+  ],
+  r1201b: [],
+};
+
+async function seedServersOnce(roomKey) {
+  const seeds = SEED_SERVERS[roomKey];
+  if (!seeds || seeds.length === 0) return;
+  try {
+    // 이미 데이터가 있으면 스킵 (localStorage 미사용 - 항상 Firestore 확인)
+    const snap = await db.collection('servers').where('roomKey','==',roomKey).limit(1).get();
+    if (!snap.empty) return;
+    const batch = db.batch();
+    seeds.forEach(s => {
+      const ref = db.collection('servers').doc();
+      batch.set(ref, { ...s, roomKey, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    });
+    await batch.commit();
+    console.log('서버 초기 데이터 입력 완료:', roomKey);
+  } catch(e) { console.error('시드 오류:', e); }
+}
+
+/* ── 편집실 목록 카드 작품명 실시간 표시 ── */
+let roomsInfoUnsub = null;
+function loadRoomsInfo() {
+  if (roomsInfoUnsub) return;
+  roomsInfoUnsub = db.collection('rooms').onSnapshot(snap => {
+    snap.docs.forEach(doc => {
+      const el = document.getElementById('proj-' + doc.id);
+      if (!el) return;
+      const project = doc.data().project || '';
+      el.textContent = project ? '▪ ' + project : '';
+      el.style.display = project ? '' : 'none';
+    });
+  });
+}
+
+/* ── 작품 정보 (Firestore rooms 컬렉션) ── */
+function loadRoomInfo(roomKey) {
+  if (roomInfoUnsub) roomInfoUnsub();
+  roomInfoUnsub = db.collection('rooms').doc(roomKey).onSnapshot(doc => {
+    const d = doc.exists ? doc.data() : {};
+    renderRoomInfoField('ri-project', 'project',  d.project  || '');
+    renderRoomInfoField('ri-checkin', 'checkIn',  d.checkIn  || '');
+    renderRoomInfoField('ri-checkout','checkOut', d.checkOut || '');
+  });
+}
+
+function renderRoomInfoField(elId, field, value) {
+  const el = document.getElementById(elId);
+  if (!el || el.querySelector('input')) return; // 편집 중이면 skip
+  el.innerHTML = value
+    ? `<span>${value}</span><span class="ri-icon">✏</span>`
+    : `<span class="room-info-empty">미입력</span><span class="ri-icon">✏</span>`;
+}
+
+function editRoomInfo(field, el) {
+  const fieldMap = { project:'ri-project', checkIn:'ri-checkin', checkOut:'ri-checkout' };
+  const elId = fieldMap[field];
+  const container = document.getElementById(elId);
+  const current = container.querySelector('span:not(.room-info-empty):not(.ri-icon)');
+  const curVal = current ? current.textContent : '';
+  const isDate = field !== 'project';
+  const inp = document.createElement('input');
+  inp.className = 'room-info-input';
+  inp.type = isDate ? 'date' : 'text';
+  inp.value = curVal;
+  if (isDate && !curVal) inp.value = '';
+  container.innerHTML = '';
+  container.appendChild(inp);
+  inp.focus();
+  const save = () => {
+    const val = inp.value.trim();
+    db.collection('rooms').doc(currentRoom).set({ [field]: val }, { merge: true });
+    renderRoomInfoField(elId, field, val);
+  };
+  inp.addEventListener('blur', save);
+  inp.addEventListener('keydown', e => { if (e.key==='Enter') inp.blur(); if (e.key==='Escape') { renderRoomInfoField(elId, field, curVal); } });
+}
+let editingSrvId = null;
+let currentSrvType   = 'nas';
+let currentSrvStatus = 'online';
+
+function loadServers(roomKey) {
+  if (serverUnsub) serverUnsub();
+  // orderBy 제거 → 복합 인덱스 불필요, 클라이언트 정렬
+  serverUnsub = db.collection('servers').where('roomKey','==',roomKey)
+    .onSnapshot(snap => {
+      const grid  = document.getElementById('server-grid');
+      const badge = document.getElementById('server-cnt-badge');
+      if (!grid) return;
+      if (snap.empty) { grid.innerHTML = ''; if(badge) badge.textContent='0대'; return; }
+      if (badge) badge.textContent = snap.size + '대';
+      const statusClass = {online:'srv-online', warning:'srv-warning', offline:'srv-offline'};
+      const statusLabel = {online:'온라인', warning:'경고', offline:'오프라인'};
+      // createdAt 기준 클라이언트 정렬
+      const docs = [...snap.docs].sort((a,b) => {
+        const at = a.data().createdAt, bt = b.data().createdAt;
+        if (!at || !bt) return 0;
+        return (at.toMillis ? at.toMillis() : 0) - (bt.toMillis ? bt.toMillis() : 0);
+      });
+      grid.innerHTML = docs.map(doc => {
+        const s = doc.data();
+        const sc = statusClass[s.status] || 'srv-offline';
+        const sl = statusLabel[s.status] || '-';
+        const typeLabel = s.type === 'nas' ? 'NAS' : 'NETWORK';
+        const extraRows = s.type === 'nas'
+          ? `${s.assetCode ? `<div class="server-meta-row"><span class="server-meta-lbl">자산코드</span><span class="server-meta-val">${s.assetCode}</span></div>` : ''}
+             ${s.serial    ? `<div class="server-meta-row"><span class="server-meta-lbl">시리얼</span><span class="server-meta-val" style="font-size:10px">${s.serial}</span></div>` : ''}
+             ${s.capacity  ? `<div class="server-meta-row"><span class="server-meta-lbl">용량</span><span class="server-meta-val">${s.capacity}</span></div>` : ''}
+             ${s.mount     ? `<div class="server-meta-row"><span class="server-meta-lbl">마운트</span><span class="server-meta-val">${s.mount}</span></div>` : ''}`
+          : `${s.role      ? `<div class="server-meta-row"><span class="server-meta-lbl">역할</span><span class="server-meta-val">${s.role}</span></div>` : ''}`;
+        return `<div class="server-card">
+          <div class="server-actions">
+            <button class="srv-btn edit" onclick="openServerModal('${doc.id}')" title="수정">✏</button>
+            <button class="srv-btn del"  onclick="deleteSrv('${doc.id}')" title="삭제">✕</button>
+          </div>
+          <div class="server-card-hdr">
+            <div class="server-status ${sc}" title="${sl}"></div>
+            <div class="server-name">${s.name||'(이름 없음)'}</div>
+            <span class="server-type-badge">${typeLabel}</span>
+          </div>
+          <div class="server-meta">
+            <div class="server-meta-row"><span class="server-meta-lbl">IP</span><span class="server-meta-val">${s.ip||'-'}</span></div>
+            ${extraRows}
+          </div>
+          ${s.memo ? `<div class="server-memo">${s.memo}</div>` : ''}
+        </div>`;
+      }).join('');
+    }, err => console.error('서버 로드 오류:', err));
+}
+
+// 유형 / 상태 선택
+function setSrvType(t) {
+  currentSrvType = t;
+  ['nas','network'].forEach(x => {
+    document.getElementById('stype-'+x).classList.toggle('active', x===t);
+  });
+  document.getElementById('srv-nas-fields').style.display = t==='nas' ? '' : 'none';
+  document.getElementById('srv-net-fields').style.display = t==='network' ? '' : 'none';
+}
+function setSrvStatus(s) {
+  currentSrvStatus = s;
+  ['online','warning','offline'].forEach(x => {
+    const btn = document.getElementById('sstatus-'+x);
+    btn.className = 'srv-status-btn ' + (x===s ? 'active '+x : x);
+  });
+}
+
+// 모달 열기 (추가 or 수정)
+function openServerModal(id) {
+  editingSrvId = id || null;
+  document.getElementById('srv-modal-title').textContent = id ? '장비 수정' : '장비 추가';
+  if (id) {
+    db.collection('servers').doc(id).get().then(doc => {
+      const s = doc.data();
+      setSrvType(s.type || 'nas');
+      setSrvStatus(s.status || 'online');
+      document.getElementById('srv-name').value       = s.name      || '';
+      document.getElementById('srv-ip').value         = s.ip        || '';
+      document.getElementById('srv-asset-code').value = s.assetCode || '';
+      document.getElementById('srv-serial').value     = s.serial    || '';
+      document.getElementById('srv-capacity').value   = s.capacity  || '';
+      document.getElementById('srv-mount').value      = s.mount     || '';
+      document.getElementById('srv-role').value       = s.role      || '';
+      document.getElementById('srv-memo').value       = s.memo      || '';
+      document.getElementById('srv-modal').classList.add('open');
+    });
+  } else {
+    setSrvType('nas'); setSrvStatus('online');
+    ['srv-name','srv-ip','srv-asset-code','srv-serial','srv-capacity','srv-mount','srv-role','srv-memo'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('srv-modal').classList.add('open');
+  }
+}
+function closeSrvModal() {
+  document.getElementById('srv-modal').classList.remove('open');
+  editingSrvId = null;
+}
+function saveSrvModal() {
+  const data = {
+    roomKey:    currentRoom,
+    type:       currentSrvType,
+    status:     currentSrvStatus,
+    name:       document.getElementById('srv-name').value.trim(),
+    ip:         document.getElementById('srv-ip').value.trim(),
+    assetCode:  document.getElementById('srv-asset-code').value.trim(),
+    serial:     document.getElementById('srv-serial').value.trim(),
+    capacity:   document.getElementById('srv-capacity').value.trim(),
+    mount:      document.getElementById('srv-mount').value.trim(),
+    role:       document.getElementById('srv-role').value.trim(),
+    memo:       document.getElementById('srv-memo').value.trim(),
+  };
+  if (!data.name) { alert('이름을 입력해주세요.'); return; }
+  if (editingSrvId) {
+    db.collection('servers').doc(editingSrvId).update(data);
+  } else {
+    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    db.collection('servers').add(data);
+  }
+  closeSrvModal();
+}
+function deleteSrv(id) {
+  if (confirm('장비를 삭제할까요?')) db.collection('servers').doc(id).delete();
+}
+
 /* ── Init ── */
+// 앱 시작 시 편집실 작품명 구독 (모든 선언 이후에 실행)
+loadRoomsInfo();
 // updateHomeCount는 Firestore onSnapshot 콜백에서 자동 호출됨
 </script>
 </body>
